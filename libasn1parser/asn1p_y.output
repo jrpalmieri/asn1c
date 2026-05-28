@@ -1,0 +1,6571 @@
+Terminals unused in grammar
+
+    TOK_ABSTRACT_SYNTAX
+    TOK_ENCODED
+    TOK_MINUS_INFINITY
+    TOK_PLUS_INFINITY
+    TOK_TYPE_IDENTIFIER
+    "concrete TypeDeclaration"
+
+
+State 91 conflicts: 1 shift/reduce
+State 227 conflicts: 1 shift/reduce
+State 228 conflicts: 1 shift/reduce
+State 239 conflicts: 1 shift/reduce
+State 240 conflicts: 1 shift/reduce
+State 321 conflicts: 2 reduce/reduce
+
+
+Grammar
+
+    0 $accept: ParsedGrammar $end
+
+    1 ParsedGrammar: "UTF-8 byte order mark" ModuleList
+    2              | ModuleList
+
+    3 ModuleList: ModuleDefinition
+    4           | ModuleList ModuleDefinition
+
+    5 $@1: ε
+
+    6 ModuleDefinition: TypeRefName $@1 optObjectIdentifier TOK_DEFINITIONS optModuleDefinitionFlags TOK_PPEQ TOK_BEGIN optModuleBody TOK_END
+
+    7 optObjectIdentifier: ε
+    8                    | ObjectIdentifier
+
+    9 ObjectIdentifier: '{' ObjectIdentifierBody '}'
+   10                 | '{' '}'
+
+   11 ObjectIdentifierBody: ObjectIdentifierElement
+   12                     | ObjectIdentifierBody ObjectIdentifierElement
+
+   13 ObjectIdentifierElement: Identifier
+   14                        | Identifier '(' "number" ')'
+   15                        | "number"
+
+   16 optModuleDefinitionFlags: ε
+   17                         | ModuleDefinitionFlags
+
+   18 ModuleDefinitionFlags: ModuleDefinitionFlag
+   19                      | ModuleDefinitionFlags ModuleDefinitionFlag
+
+   20 ModuleDefinitionFlag: TOK_EXPLICIT TOK_TAGS
+   21                     | TOK_IMPLICIT TOK_TAGS
+   22                     | TOK_AUTOMATIC TOK_TAGS
+   23                     | TOK_EXTENSIBILITY TOK_IMPLIED
+   24                     | TOK_capitalreference TOK_INSTRUCTIONS
+
+   25 optModuleBody: ε
+   26              | ModuleBody
+
+   27 ModuleBody: optExports optImports AssignmentList
+
+   28 AssignmentList: Assignment
+   29               | AssignmentList Assignment
+
+   30 Assignment: DataTypeReference
+   31           | ValueAssignment
+
+   32 $@2: ε
+
+   33 Assignment: TypeRefName TOK_capitalreference TOK_PPEQ '{' $@2 Opaque
+   34           | ValueSetTypeAssignment
+
+   35 $@3: ε
+
+   36 Assignment: TOK_ENCODING_CONTROL TOK_capitalreference $@3
+   37           | BasicString
+
+   38 optImports: ε
+   39           | ImportsDefinition
+
+   40 ImportsDefinition: TOK_IMPORTS optImportsBundleSet ';'
+   41                  | TOK_IMPORTS TOK_FROM
+
+   42 optImportsBundleSet: ε
+   43                    | ImportsBundleSet
+
+   44 ImportsBundleSet: ImportsBundle
+   45                 | ImportsBundleSet ImportsBundle
+
+   46 AssignedIdentifier: ε
+   47                   | ObjectIdentifier
+
+   48 ImportsBundle: ImportsList TOK_FROM TypeRefName AssignedIdentifier
+
+   49 ImportsList: ImportsElement
+   50            | ImportsList ',' ImportsElement
+
+   51 ImportsElement: TypeRefName
+   52               | TypeRefName '{' '}'
+   53               | Identifier
+
+   54 optExports: ε
+   55           | ExportsDefinition
+
+   56 ExportsDefinition: TOK_EXPORTS ExportsBody ';'
+   57                  | TOK_EXPORTS TOK_ALL ';'
+   58                  | TOK_EXPORTS ';'
+
+   59 ExportsBody: ExportsElement
+   60            | ExportsBody ',' ExportsElement
+
+   61 ExportsElement: TypeRefName
+   62               | TypeRefName '{' '}'
+   63               | Identifier
+
+   64 ValueSet: '{' ElementSetSpecs '}'
+
+   65 ValueSetTypeAssignment: TypeRefName Type TOK_PPEQ ValueSet
+
+   66 DefinedType: ComplexTypeReference
+   67            | ComplexTypeReference '{' ActualParameterList '}'
+
+   68 DataTypeReference: TypeRefName TOK_PPEQ Type
+   69                  | TypeRefName TOK_PPEQ ObjectClass
+   70                  | TypeRefName '{' ParameterArgumentList '}' TOK_PPEQ Type
+   71                  | TypeRefName '{' ParameterArgumentList '}' TOK_PPEQ ObjectClass
+
+   72 ParameterArgumentList: ParameterArgumentName
+   73                      | ParameterArgumentList ',' ParameterArgumentName
+
+   74 ParameterArgumentName: TypeRefName
+   75                      | TypeRefName ':' Identifier
+   76                      | TypeRefName ':' TypeRefName
+   77                      | BasicTypeId ':' Identifier
+   78                      | BasicTypeId ':' TypeRefName
+
+   79 ActualParameterList: ActualParameter
+   80                    | ActualParameterList ',' ActualParameter
+
+   81 ActualParameter: UntaggedType
+   82                | SimpleValue
+   83                | DefinedValue
+   84                | ValueSet
+
+   85 optComponentTypeLists: ε
+   86                      | ComponentTypeLists
+
+   87 ComponentTypeLists: ComponentType
+   88                   | ComponentTypeLists ',' ComponentType
+   89                   | ComponentTypeLists ',' TOK_VBracketLeft ComponentTypeLists TOK_VBracketRight
+
+   90 ComponentType: Identifier MaybeIndirectTaggedType optMarker
+   91              | MaybeIndirectTaggedType optMarker
+   92              | TOK_COMPONENTS TOK_OF MaybeIndirectTaggedType
+   93              | ExtensionAndException
+
+   94 AlternativeTypeLists: AlternativeType
+   95                     | AlternativeTypeLists ',' AlternativeType
+   96                     | AlternativeTypeLists ',' TOK_VBracketLeft AlternativeTypeLists TOK_VBracketRight
+
+   97 AlternativeType: Identifier MaybeIndirectTaggedType
+   98                | ExtensionAndException
+   99                | MaybeIndirectTaggedType
+
+  100 ObjectClass: TOK_CLASS '{' FieldSpec '}' optWithSyntax
+
+  101 optUNIQUE: ε
+  102          | TOK_UNIQUE
+
+  103 FieldSpec: ClassField
+  104          | FieldSpec ',' ClassField
+
+  105 ClassField: TOK_typefieldreference optMarker
+  106           | TOK_valuefieldreference Type optUNIQUE optMarker
+  107           | TOK_valuefieldreference FieldName optMarker
+  108           | TOK_valuefieldreference DefinedObjectClass optMarker
+  109           | TOK_typefieldreference FieldName optMarker
+  110           | TOK_typefieldreference Type optMarker
+  111           | TOK_typefieldreference DefinedObjectClass optMarker
+
+  112 optWithSyntax: ε
+  113              | WithSyntax
+
+  114 $@4: ε
+
+  115 WithSyntax: TOK_WITH TOK_SYNTAX '{' $@4 WithSyntaxList '}'
+
+  116 WithSyntaxList: WithSyntaxToken
+  117               | WithSyntaxList WithSyntaxToken
+
+  118 WithSyntaxToken: TOK_whitespace
+  119                | TOK_Literal
+  120                | PrimitiveFieldReference
+  121                | '[' WithSyntaxList ']'
+
+  122 ExtensionAndException: "..."
+  123                      | "..." '!' DefinedValue
+  124                      | "..." '!' SignedNumber
+
+  125 Type: TaggedType
+
+  126 TaggedType: optTag UntaggedType
+
+  127 DefinedUntaggedType: DefinedType optManyConstraints
+
+  128 UntaggedType: TypeDeclaration optManyConstraints
+
+  129 MaybeIndirectTaggedType: optTag MaybeIndirectTypeDeclaration optManyConstraints
+
+  130 NSTD_IndirectMarker: ε
+
+  131 MaybeIndirectTypeDeclaration: NSTD_IndirectMarker TypeDeclaration
+
+  132 TypeDeclaration: ConcreteTypeDeclaration
+  133                | DefinedType
+
+  134 ConcreteTypeDeclaration: BuiltinType
+  135                        | TOK_CHOICE '{' AlternativeTypeLists '}'
+  136                        | TOK_SEQUENCE '{' optComponentTypeLists '}'
+  137                        | TOK_SET '{' optComponentTypeLists '}'
+  138                        | TOK_SEQUENCE optSizeOrConstraint TOK_OF optIdentifier optTag MaybeIndirectTypeDeclaration
+  139                        | TOK_SET optSizeOrConstraint TOK_OF optIdentifier optTag MaybeIndirectTypeDeclaration
+  140                        | TOK_ANY
+  141                        | TOK_ANY TOK_DEFINED TOK_BY Identifier
+  142                        | TOK_INSTANCE TOK_OF ComplexTypeReference
+
+  143 ComplexTypeReference: TOK_typereference
+  144                     | TOK_capitalreference
+  145                     | TOK_typereference '.' TypeRefName
+  146                     | TOK_capitalreference '.' TypeRefName
+  147                     | TOK_capitalreference '.' ComplexTypeReferenceAmpList
+
+  148 ComplexTypeReferenceAmpList: ComplexTypeReferenceElement
+  149                            | ComplexTypeReferenceAmpList '.' ComplexTypeReferenceElement
+
+  150 ComplexTypeReferenceElement: PrimitiveFieldReference
+
+  151 PrimitiveFieldReference: TOK_typefieldreference
+  152                        | TOK_valuefieldreference
+
+  153 FieldName: TOK_typefieldreference
+  154          | FieldName '.' TOK_typefieldreference
+  155          | FieldName '.' TOK_valuefieldreference
+
+  156 DefinedObjectClass: TOK_capitalreference
+
+  157 ValueAssignment: Identifier Type TOK_PPEQ Value
+
+  158 Value: SimpleValue
+  159      | DefinedValue
+
+  160 $@5: ε
+
+  161 Value: '{' $@5 Opaque
+
+  162 SimpleValue: TOK_NULL
+  163            | TOK_FALSE
+  164            | TOK_TRUE
+  165            | SignedNumber
+  166            | RealValue
+  167            | RestrictedCharacterStringValue
+  168            | BitStringValue
+
+  169 DefinedValue: IdentifierAsValue
+  170             | TypeRefName '.' Identifier
+
+  171 RestrictedCharacterStringValue: TOK_cstring
+  172                               | TOK_tuple
+  173                               | TOK_quadruple
+
+  174 Opaque: OpaqueFirstToken
+  175       | Opaque TOK_opaque
+
+  176 OpaqueFirstToken: TOK_opaque
+  177                 | Identifier
+
+  178 BasicTypeId: TOK_BOOLEAN
+  179            | TOK_NULL
+  180            | TOK_REAL
+  181            | TOK_OCTET TOK_STRING
+  182            | TOK_OBJECT TOK_IDENTIFIER
+  183            | TOK_RELATIVE_OID
+  184            | TOK_EXTERNAL
+  185            | TOK_EMBEDDED TOK_PDV
+  186            | TOK_CHARACTER TOK_STRING
+  187            | TOK_UTCTime
+  188            | TOK_GeneralizedTime
+  189            | BasicString
+  190            | BasicTypeId_UniverationCompatible
+
+  191 BasicTypeId_UniverationCompatible: TOK_INTEGER
+  192                                  | TOK_ENUMERATED
+  193                                  | TOK_BIT TOK_STRING
+
+  194 BuiltinType: BasicTypeId
+  195            | TOK_INTEGER '{' NamedNumberList '}'
+  196            | TOK_ENUMERATED '{' Enumerations '}'
+  197            | TOK_BIT TOK_STRING '{' NamedBitList '}'
+  198            | TOK_ExtValue_BIT_STRING '{' IdentifierList '}'
+  199            | TOK_ExtValue_BIT_STRING '{' '}'
+
+  200 BasicString: TOK_BMPString
+  201            | TOK_GeneralString
+  202            | TOK_GraphicString
+  203            | TOK_IA5String
+  204            | TOK_ISO646String
+  205            | TOK_NumericString
+  206            | TOK_PrintableString
+  207            | TOK_T61String
+  208            | TOK_TeletexString
+  209            | TOK_UniversalString
+  210            | TOK_UTF8String
+  211            | TOK_VideotexString
+  212            | TOK_VisibleString
+  213            | TOK_ObjectDescriptor
+
+  214 UnionMark: '|'
+  215          | TOK_UNION
+
+  216 IntersectionMark: '^'
+  217                 | TOK_INTERSECTION
+
+  218 optConstraint: ε
+  219              | Constraint
+
+  220 optManyConstraints: ε
+  221                   | ManyConstraints
+
+  222 optSizeOrConstraint: ε
+  223                    | Constraint
+  224                    | SizeConstraint
+
+  225 Constraint: '(' ConstraintSpec ')'
+
+  226 ManyConstraints: Constraint
+  227                | ManyConstraints Constraint
+
+  228 ConstraintSpec: SubtypeConstraint
+  229               | GeneralConstraint
+
+  230 SubtypeConstraint: ElementSetSpecs
+
+  231 ElementSetSpecs: "..."
+  232                | ElementSetSpec
+  233                | ElementSetSpec ',' "..."
+  234                | ElementSetSpec ',' "..." ',' ElementSetSpec
+
+  235 ElementSetSpec: Unions
+  236               | TOK_ALL TOK_EXCEPT Elements
+
+  237 Unions: Intersections
+  238       | Unions UnionMark Intersections
+
+  239 Intersections: IntersectionElements
+  240              | Intersections IntersectionMark IntersectionElements
+
+  241 IntersectionElements: Elements
+  242                     | Elements TOK_EXCEPT Elements
+
+  243 Elements: SubtypeElements
+  244         | '(' ElementSetSpec ')'
+
+  245 SubtypeElements: SingleValue
+  246                | ContainedSubtype
+  247                | PermittedAlphabet
+  248                | SizeConstraint
+  249                | InnerTypeConstraints
+  250                | PatternConstraint
+  251                | ValueRange
+
+  252 PermittedAlphabet: TOK_FROM Constraint
+
+  253 SizeConstraint: TOK_SIZE Constraint
+
+  254 PatternConstraint: TOK_PATTERN TOK_cstring
+  255                  | TOK_PATTERN Identifier
+
+  256 ValueRange: LowerEndValue ConstraintRangeSpec UpperEndValue
+
+  257 LowerEndValue: SingleValue
+  258              | TOK_MIN
+
+  259 UpperEndValue: SingleValue
+  260              | TOK_MAX
+
+  261 SingleValue: Value
+
+  262 BitStringValue: TOK_bstring
+  263               | TOK_hstring
+
+  264 ContainedSubtype: TOK_INCLUDES Type
+  265                 | DefinedUntaggedType
+
+  266 InnerTypeConstraints: TOK_WITH TOK_COMPONENT SingleTypeConstraint
+  267                     | TOK_WITH TOK_COMPONENTS MultipleTypeConstraints
+
+  268 SingleTypeConstraint: Constraint
+
+  269 MultipleTypeConstraints: FullSpecification
+  270                        | PartialSpecification
+
+  271 FullSpecification: '{' TypeConstraints '}'
+
+  272 PartialSpecification: '{' "..." ',' TypeConstraints '}'
+
+  273 TypeConstraints: NamedConstraint
+  274                | TypeConstraints ',' NamedConstraint
+
+  275 NamedConstraint: IdentifierAsValue optConstraint optPresenceConstraint
+
+  276 optPresenceConstraint: ε
+  277                      | PresenceConstraint
+
+  278 PresenceConstraint: TOK_PRESENT
+  279                   | TOK_ABSENT
+  280                   | TOK_OPTIONAL
+
+  281 GeneralConstraint: UserDefinedConstraint
+  282                  | TableConstraint
+  283                  | ContentsConstraint
+
+  284 $@6: ε
+
+  285 UserDefinedConstraint: TOK_CONSTRAINED TOK_BY '{' $@6 Opaque
+
+  286 ContentsConstraint: TOK_CONTAINING Type
+
+  287 ConstraintRangeSpec: ".."
+  288                    | ".." '<'
+  289                    | '<' ".."
+  290                    | '<' ".." '<'
+
+  291 TableConstraint: SimpleTableConstraint
+  292                | ComponentRelationConstraint
+
+  293 SimpleTableConstraint: '{' TypeRefName '}'
+
+  294 ComponentRelationConstraint: SimpleTableConstraint '{' AtNotationList '}'
+
+  295 AtNotationList: AtNotationElement
+  296               | AtNotationList ',' AtNotationElement
+
+  297 AtNotationElement: '@' ComponentIdList
+  298                  | '@' '.' ComponentIdList
+
+  299 ComponentIdList: Identifier
+  300                | ComponentIdList '.' Identifier
+
+  301 optMarker: ε
+  302          | Marker
+
+  303 Marker: TOK_OPTIONAL
+  304       | TOK_DEFAULT Value
+
+  305 IdentifierList: IdentifierElement
+  306               | IdentifierList ',' IdentifierElement
+
+  307 IdentifierElement: Identifier
+
+  308 NamedNumberList: NamedNumber
+  309                | NamedNumberList ',' NamedNumber
+
+  310 NamedNumber: Identifier '(' SignedNumber ')'
+  311            | Identifier '(' DefinedValue ')'
+
+  312 NamedBitList: NamedBit
+  313             | NamedBitList ',' NamedBit
+
+  314 NamedBit: Identifier '(' "number" ')'
+  315         | Identifier '(' DefinedValue ')'
+
+  316 Enumerations: UniverationList
+
+  317 UniverationList: UniverationElement
+  318                | UniverationList ',' UniverationElement
+
+  319 UniverationElement: Identifier
+  320                   | Identifier '(' SignedNumber ')'
+  321                   | Identifier '(' DefinedValue ')'
+  322                   | SignedNumber
+  323                   | "..."
+
+  324 SignedNumber: "number"
+  325             | "negative number"
+
+  326 RealValue: TOK_realnumber
+
+  327 optTag: ε
+  328       | Tag
+
+  329 Tag: TagTypeValue TagPlicit
+
+  330 TagTypeValue: '[' TagClass "number" ']'
+
+  331 TagClass: ε
+  332         | TOK_UNIVERSAL
+  333         | TOK_APPLICATION
+  334         | TOK_PRIVATE
+
+  335 TagPlicit: ε
+  336          | TOK_IMPLICIT
+  337          | TOK_EXPLICIT
+
+  338 TypeRefName: TOK_typereference
+  339            | TOK_capitalreference
+
+  340 optIdentifier: ε
+  341              | Identifier
+
+  342 Identifier: "identifier"
+
+  343 IdentifierAsReference: Identifier
+
+  344 IdentifierAsValue: IdentifierAsReference
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    '!' (33) 123 124
+    '(' (40) 14 225 244 310 311 314 315 320 321
+    ')' (41) 14 225 244 310 311 314 315 320 321
+    ',' (44) 50 60 73 80 88 89 95 96 104 233 234 272 274 296 306 309 313 318
+    '.' (46) 145 146 147 149 154 155 170 298 300
+    ':' (58) 75 76 77 78
+    ';' (59) 40 56 57 58
+    '<' (60) 288 289 290
+    '@' (64) 297 298
+    '[' (91) 121 330
+    ']' (93) 121 330
+    '^' (94) 216
+    '{' (123) 9 10 33 52 62 64 67 70 71 100 115 135 136 137 161 195 196 197 198 199 271 272 285 293 294
+    '|' (124) 214
+    '}' (125) 9 10 52 62 64 67 70 71 100 115 135 136 137 195 196 197 198 199 271 272 293 294
+    error (256)
+    TOK_PPEQ (258) 6 33 65 68 69 70 71 157
+    TOK_VBracketLeft (259) 89 96
+    TOK_VBracketRight (260) 89 96
+    TOK_whitespace <tv_opaque> (261) 118
+    TOK_opaque <tv_opaque> (262) 175 176
+    TOK_bstring <tv_str> (263) 262
+    TOK_cstring <tv_opaque> (264) 171 254
+    TOK_hstring <tv_str> (265) 263
+    "identifier" <tv_str> (266) 342
+    "number" <a_int> (267) 14 15 314 324 330
+    "negative number" <a_int> (268) 325
+    TOK_realnumber <a_dbl> (269) 326
+    TOK_tuple <a_int> (270) 172
+    TOK_quadruple <a_int> (271) 173
+    TOK_typereference <tv_str> (272) 143 145 338
+    TOK_capitalreference <tv_str> (273) 24 33 36 144 146 147 156 339
+    TOK_typefieldreference <tv_str> (274) 105 109 110 111 151 153 154
+    TOK_valuefieldreference <tv_str> (275) 106 107 108 152 155
+    TOK_Literal <tv_str> (276) 119
+    TOK_ExtValue_BIT_STRING (277) 198 199
+    TOK_ABSENT (278) 279
+    TOK_ABSTRACT_SYNTAX (279)
+    TOK_ALL (280) 57 236
+    TOK_ANY (281) 140 141
+    TOK_APPLICATION (282) 333
+    TOK_AUTOMATIC (283) 22
+    TOK_BEGIN (284) 6
+    TOK_BIT (285) 193 197
+    TOK_BMPString (286) 200
+    TOK_BOOLEAN (287) 178
+    TOK_BY (288) 141 285
+    TOK_CHARACTER (289) 186
+    TOK_CHOICE (290) 135
+    TOK_CLASS (291) 100
+    TOK_COMPONENT (292) 266
+    TOK_COMPONENTS (293) 92 267
+    TOK_CONSTRAINED (294) 285
+    TOK_CONTAINING (295) 286
+    TOK_DEFAULT (296) 304
+    TOK_DEFINITIONS (297) 6
+    TOK_DEFINED (298) 141
+    TOK_EMBEDDED (299) 185
+    TOK_ENCODED (300)
+    TOK_ENCODING_CONTROL (301) 36
+    TOK_END (302) 6
+    TOK_ENUMERATED (303) 192 196
+    TOK_EXPLICIT (304) 20 337
+    TOK_EXPORTS (305) 56 57 58
+    TOK_EXTENSIBILITY (306) 23
+    TOK_EXTERNAL (307) 184
+    TOK_FALSE (308) 163
+    TOK_FROM (309) 41 48 252
+    TOK_GeneralizedTime (310) 188
+    TOK_GeneralString (311) 201
+    TOK_GraphicString (312) 202
+    TOK_IA5String (313) 203
+    TOK_IDENTIFIER (314) 182
+    TOK_IMPLICIT (315) 21 336
+    TOK_IMPLIED (316) 23
+    TOK_IMPORTS (317) 40 41
+    TOK_INCLUDES (318) 264
+    TOK_INSTANCE (319) 142
+    TOK_INSTRUCTIONS (320) 24
+    TOK_INTEGER (321) 191 195
+    TOK_ISO646String (322) 204
+    TOK_MAX (323) 260
+    TOK_MIN (324) 258
+    TOK_MINUS_INFINITY (325)
+    TOK_NULL (326) 162 179
+    TOK_NumericString (327) 205
+    TOK_OBJECT (328) 182
+    TOK_ObjectDescriptor (329) 213
+    TOK_OCTET (330) 181
+    TOK_OF (331) 92 138 139 142
+    TOK_OPTIONAL (332) 280 303
+    TOK_PATTERN (333) 254 255
+    TOK_PDV (334) 185
+    TOK_PLUS_INFINITY (335)
+    TOK_PRESENT (336) 278
+    TOK_PrintableString (337) 206
+    TOK_PRIVATE (338) 334
+    TOK_REAL (339) 180
+    TOK_RELATIVE_OID (340) 183
+    TOK_SEQUENCE (341) 136 138
+    TOK_SET (342) 137 139
+    TOK_SIZE (343) 253
+    TOK_STRING (344) 181 186 193 197
+    TOK_SYNTAX (345) 115
+    TOK_T61String (346) 207
+    TOK_TAGS (347) 20 21 22
+    TOK_TeletexString (348) 208
+    TOK_TRUE (349) 164
+    TOK_TYPE_IDENTIFIER (350)
+    TOK_UNIQUE (351) 102
+    TOK_UNIVERSAL (352) 332
+    TOK_UniversalString (353) 209
+    TOK_UTCTime (354) 187
+    TOK_UTF8String (355) 210
+    TOK_VideotexString (356) 211
+    TOK_VisibleString (357) 212
+    TOK_WITH (358) 115 266 267
+    "UTF-8 byte order mark" (359) 1
+    TOK_EXCEPT (360) 236 242
+    TOK_INTERSECTION (361) 217
+    TOK_UNION (362) 215
+    ".." (363) 287 288 289 290
+    "..." (364) 122 123 124 231 233 234 272 323
+    "concrete TypeDeclaration" <a_expr> (365)
+
+
+Nonterminals, with rules where they appear
+
+    $accept (126)
+        on left: 0
+    ParsedGrammar (127)
+        on left: 1 2
+        on right: 0
+    ModuleList <a_grammar> (128)
+        on left: 3 4
+        on right: 1 2 4
+    ModuleDefinition <a_module> (129)
+        on left: 6
+        on right: 3 4
+    $@1 (130)
+        on left: 5
+        on right: 6
+    optObjectIdentifier <a_oid> (131)
+        on left: 7 8
+        on right: 6
+    ObjectIdentifier <a_oid> (132)
+        on left: 9 10
+        on right: 8 47
+    ObjectIdentifierBody <a_oid> (133)
+        on left: 11 12
+        on right: 9 12
+    ObjectIdentifierElement <a_oid_arc> (134)
+        on left: 13 14 15
+        on right: 11 12
+    optModuleDefinitionFlags <a_module_flags> (135)
+        on left: 16 17
+        on right: 6
+    ModuleDefinitionFlags <a_module_flags> (136)
+        on left: 18 19
+        on right: 17 19
+    ModuleDefinitionFlag <a_module_flags> (137)
+        on left: 20 21 22 23 24
+        on right: 18 19
+    optModuleBody <a_module> (138)
+        on left: 25 26
+        on right: 6
+    ModuleBody <a_module> (139)
+        on left: 27
+        on right: 26
+    AssignmentList <a_module> (140)
+        on left: 28 29
+        on right: 27 29
+    Assignment <a_module> (141)
+        on left: 30 31 33 34 36 37
+        on right: 28 29
+    $@2 (142)
+        on left: 32
+        on right: 33
+    $@3 (143)
+        on left: 35
+        on right: 36
+    optImports <a_module> (144)
+        on left: 38 39
+        on right: 27
+    ImportsDefinition <a_module> (145)
+        on left: 40 41
+        on right: 39
+    optImportsBundleSet <a_module> (146)
+        on left: 42 43
+        on right: 40
+    ImportsBundleSet <a_module> (147)
+        on left: 44 45
+        on right: 43 45
+    AssignedIdentifier <a_aid> (148)
+        on left: 46 47
+        on right: 48
+    ImportsBundle <a_xports> (149)
+        on left: 48
+        on right: 44 45
+    ImportsList <a_xports> (150)
+        on left: 49 50
+        on right: 48 50
+    ImportsElement <a_expr> (151)
+        on left: 51 52 53
+        on right: 49 50
+    optExports <a_module> (152)
+        on left: 54 55
+        on right: 27
+    ExportsDefinition <a_xports> (153)
+        on left: 56 57 58
+        on right: 55
+    ExportsBody <a_xports> (154)
+        on left: 59 60
+        on right: 56 60
+    ExportsElement <a_expr> (155)
+        on left: 61 62 63
+        on right: 59 60
+    ValueSet <a_constr> (156)
+        on left: 64
+        on right: 65 84
+    ValueSetTypeAssignment <a_expr> (157)
+        on left: 65
+        on right: 34
+    DefinedType <a_expr> (158)
+        on left: 66 67
+        on right: 127 133
+    DataTypeReference <a_expr> (159)
+        on left: 68 69 70 71
+        on right: 30
+    ParameterArgumentList <a_plist> (160)
+        on left: 72 73
+        on right: 70 71 73
+    ParameterArgumentName <a_parg> (161)
+        on left: 74 75 76 77 78
+        on right: 72 73
+    ActualParameterList <a_expr> (162)
+        on left: 79 80
+        on right: 67 80
+    ActualParameter <a_expr> (163)
+        on left: 81 82 83 84
+        on right: 79 80
+    optComponentTypeLists <a_expr> (164)
+        on left: 85 86
+        on right: 136 137
+    ComponentTypeLists <a_expr> (165)
+        on left: 87 88 89
+        on right: 86 88 89
+    ComponentType <a_expr> (166)
+        on left: 90 91 92 93
+        on right: 87 88
+    AlternativeTypeLists <a_expr> (167)
+        on left: 94 95 96
+        on right: 95 96 135
+    AlternativeType <a_expr> (168)
+        on left: 97 98 99
+        on right: 94 95
+    ObjectClass <a_expr> (169)
+        on left: 100
+        on right: 69 71
+    optUNIQUE <a_int> (170)
+        on left: 101 102
+        on right: 106
+    FieldSpec <a_expr> (171)
+        on left: 103 104
+        on right: 100 104
+    ClassField <a_expr> (172)
+        on left: 105 106 107 108 109 110 111
+        on right: 103 104
+    optWithSyntax <a_wsynt> (173)
+        on left: 112 113
+        on right: 100
+    WithSyntax <a_wsynt> (174)
+        on left: 115
+        on right: 113
+    $@4 (175)
+        on left: 114
+        on right: 115
+    WithSyntaxList <a_wsynt> (176)
+        on left: 116 117
+        on right: 115 117 121
+    WithSyntaxToken <a_wchunk> (177)
+        on left: 118 119 120 121
+        on right: 116 117
+    ExtensionAndException <a_expr> (178)
+        on left: 122 123 124
+        on right: 93 98
+    Type <a_expr> (179)
+        on left: 125
+        on right: 65 68 70 106 110 157 264 286
+    TaggedType <a_expr> (180)
+        on left: 126
+        on right: 125
+    DefinedUntaggedType <a_expr> (181)
+        on left: 127
+        on right: 265
+    UntaggedType <a_expr> (182)
+        on left: 128
+        on right: 81 126
+    MaybeIndirectTaggedType <a_expr> (183)
+        on left: 129
+        on right: 90 91 92 97 99
+    NSTD_IndirectMarker <a_int> (184)
+        on left: 130
+        on right: 131
+    MaybeIndirectTypeDeclaration <a_expr> (185)
+        on left: 131
+        on right: 129 138 139
+    TypeDeclaration <a_expr> (186)
+        on left: 132 133
+        on right: 128 131
+    ConcreteTypeDeclaration <a_expr> (187)
+        on left: 134 135 136 137 138 139 140 141 142
+        on right: 132
+    ComplexTypeReference <a_ref> (188)
+        on left: 143 144 145 146 147
+        on right: 66 67 142
+    ComplexTypeReferenceAmpList <a_ref> (189)
+        on left: 148 149
+        on right: 147 149
+    ComplexTypeReferenceElement <a_refcomp> (190)
+        on left: 150
+        on right: 148 149
+    PrimitiveFieldReference <a_refcomp> (191)
+        on left: 151 152
+        on right: 120 150
+    FieldName <a_ref> (192)
+        on left: 153 154 155
+        on right: 107 109 154 155
+    DefinedObjectClass <a_ref> (193)
+        on left: 156
+        on right: 108 111
+    ValueAssignment <a_expr> (194)
+        on left: 157
+        on right: 31
+    Value <a_value> (195)
+        on left: 158 159 161
+        on right: 157 261 304
+    $@5 (196)
+        on left: 160
+        on right: 161
+    SimpleValue <a_value> (197)
+        on left: 162 163 164 165 166 167 168
+        on right: 82 158
+    DefinedValue <a_value> (198)
+        on left: 169 170
+        on right: 83 123 159 311 315 321
+    RestrictedCharacterStringValue <a_value> (199)
+        on left: 171 172 173
+        on right: 167
+    Opaque <tv_opaque> (200)
+        on left: 174 175
+        on right: 33 161 175 285
+    OpaqueFirstToken <tv_opaque> (201)
+        on left: 176 177
+        on right: 174
+    BasicTypeId <a_type> (202)
+        on left: 178 179 180 181 182 183 184 185 186 187 188 189 190
+        on right: 77 78 194
+    BasicTypeId_UniverationCompatible <a_type> (203)
+        on left: 191 192 193
+        on right: 190
+    BuiltinType <a_expr> (204)
+        on left: 194 195 196 197 198 199
+        on right: 134
+    BasicString <a_type> (205)
+        on left: 200 201 202 203 204 205 206 207 208 209 210 211 212 213
+        on right: 37 189
+    UnionMark (206)
+        on left: 214 215
+        on right: 238
+    IntersectionMark (207)
+        on left: 216 217
+        on right: 240
+    optConstraint <a_constr> (208)
+        on left: 218 219
+        on right: 275
+    optManyConstraints <a_constr> (209)
+        on left: 220 221
+        on right: 127 128 129
+    optSizeOrConstraint <a_constr> (210)
+        on left: 222 223 224
+        on right: 138 139
+    Constraint <a_constr> (211)
+        on left: 225
+        on right: 219 223 226 227 252 253 268
+    ManyConstraints <a_constr> (212)
+        on left: 226 227
+        on right: 221 227
+    ConstraintSpec <a_constr> (213)
+        on left: 228 229
+        on right: 225
+    SubtypeConstraint <a_constr> (214)
+        on left: 230
+        on right: 228
+    ElementSetSpecs <a_constr> (215)
+        on left: 231 232 233 234
+        on right: 64 230
+    ElementSetSpec <a_constr> (216)
+        on left: 235 236
+        on right: 232 233 234 244
+    Unions <a_constr> (217)
+        on left: 237 238
+        on right: 235 238
+    Intersections <a_constr> (218)
+        on left: 239 240
+        on right: 237 238 240
+    IntersectionElements <a_constr> (219)
+        on left: 241 242
+        on right: 239 240
+    Elements <a_constr> (220)
+        on left: 243 244
+        on right: 236 241 242
+    SubtypeElements <a_constr> (221)
+        on left: 245 246 247 248 249 250 251
+        on right: 243
+    PermittedAlphabet <a_constr> (222)
+        on left: 252
+        on right: 247
+    SizeConstraint <a_constr> (223)
+        on left: 253
+        on right: 224 248
+    PatternConstraint <a_constr> (224)
+        on left: 254 255
+        on right: 250
+    ValueRange <a_constr> (225)
+        on left: 256
+        on right: 251
+    LowerEndValue <a_value> (226)
+        on left: 257 258
+        on right: 256
+    UpperEndValue <a_value> (227)
+        on left: 259 260
+        on right: 256
+    SingleValue <a_value> (228)
+        on left: 261
+        on right: 245 257 259
+    BitStringValue <a_value> (229)
+        on left: 262 263
+        on right: 168
+    ContainedSubtype <a_value> (230)
+        on left: 264 265
+        on right: 246
+    InnerTypeConstraints <a_constr> (231)
+        on left: 266 267
+        on right: 249
+    SingleTypeConstraint <a_constr> (232)
+        on left: 268
+        on right: 266
+    MultipleTypeConstraints <a_constr> (233)
+        on left: 269 270
+        on right: 267
+    FullSpecification <a_constr> (234)
+        on left: 271
+        on right: 269
+    PartialSpecification <a_constr> (235)
+        on left: 272
+        on right: 270
+    TypeConstraints <a_constr> (236)
+        on left: 273 274
+        on right: 271 272 274
+    NamedConstraint <a_constr> (237)
+        on left: 275
+        on right: 273 274
+    optPresenceConstraint <a_pres> (238)
+        on left: 276 277
+        on right: 275
+    PresenceConstraint <a_pres> (239)
+        on left: 278 279 280
+        on right: 277
+    GeneralConstraint <a_constr> (240)
+        on left: 281 282 283
+        on right: 229
+    UserDefinedConstraint <a_constr> (241)
+        on left: 285
+        on right: 281
+    $@6 (242)
+        on left: 284
+        on right: 285
+    ContentsConstraint <a_constr> (243)
+        on left: 286
+        on right: 283
+    ConstraintRangeSpec <a_ctype> (244)
+        on left: 287 288 289 290
+        on right: 256
+    TableConstraint <a_constr> (245)
+        on left: 291 292
+        on right: 282
+    SimpleTableConstraint <a_constr> (246)
+        on left: 293
+        on right: 291 294
+    ComponentRelationConstraint <a_constr> (247)
+        on left: 294
+        on right: 292
+    AtNotationList <a_constr> (248)
+        on left: 295 296
+        on right: 294 296
+    AtNotationElement <a_ref> (249)
+        on left: 297 298
+        on right: 295 296
+    ComponentIdList <tv_str> (250)
+        on left: 299 300
+        on right: 297 298 300
+    optMarker <a_marker> (251)
+        on left: 301 302
+        on right: 90 91 105 106 107 108 109 110 111
+    Marker <a_marker> (252)
+        on left: 303 304
+        on right: 302
+    IdentifierList <a_expr> (253)
+        on left: 305 306
+        on right: 198 306
+    IdentifierElement <a_expr> (254)
+        on left: 307
+        on right: 305 306
+    NamedNumberList <a_expr> (255)
+        on left: 308 309
+        on right: 195 309
+    NamedNumber <a_expr> (256)
+        on left: 310 311
+        on right: 308 309
+    NamedBitList <a_expr> (257)
+        on left: 312 313
+        on right: 197 313
+    NamedBit <a_expr> (258)
+        on left: 314 315
+        on right: 312 313
+    Enumerations <a_expr> (259)
+        on left: 316
+        on right: 196
+    UniverationList <a_expr> (260)
+        on left: 317 318
+        on right: 316 318
+    UniverationElement <a_expr> (261)
+        on left: 319 320 321 322 323
+        on right: 317 318
+    SignedNumber <a_value> (262)
+        on left: 324 325
+        on right: 124 165 310 320 322
+    RealValue <a_value> (263)
+        on left: 326
+        on right: 166
+    optTag <a_tag> (264)
+        on left: 327 328
+        on right: 126 129 138 139
+    Tag <a_tag> (265)
+        on left: 329
+        on right: 328
+    TagTypeValue <a_tag> (266)
+        on left: 330
+        on right: 329
+    TagClass <a_tag> (267)
+        on left: 331 332 333 334
+        on right: 330
+    TagPlicit <a_tag> (268)
+        on left: 335 336 337
+        on right: 329
+    TypeRefName <tv_str> (269)
+        on left: 338 339
+        on right: 6 33 48 51 52 61 62 65 68 69 70 71 74 75 76 78 145 146 170 293
+    optIdentifier <tv_str> (270)
+        on left: 340 341
+        on right: 138 139
+    Identifier <tv_str> (271)
+        on left: 342
+        on right: 13 14 53 63 75 77 90 97 141 157 170 177 255 299 300 307 310 311 314 315 319 320 321 341 343
+    IdentifierAsReference <a_ref> (272)
+        on left: 343
+        on right: 344
+    IdentifierAsValue <a_value> (273)
+        on left: 344
+        on right: 169 275
+
+
+State 0
+
+    0 $accept: • ParsedGrammar $end
+
+    TOK_typereference        shift, and go to state 1
+    TOK_capitalreference     shift, and go to state 2
+    "UTF-8 byte order mark"  shift, and go to state 3
+
+    ParsedGrammar     go to state 4
+    ModuleList        go to state 5
+    ModuleDefinition  go to state 6
+    TypeRefName       go to state 7
+
+
+State 1
+
+  338 TypeRefName: TOK_typereference •
+
+    $default  reduce using rule 338 (TypeRefName)
+
+
+State 2
+
+  339 TypeRefName: TOK_capitalreference •
+
+    $default  reduce using rule 339 (TypeRefName)
+
+
+State 3
+
+    1 ParsedGrammar: "UTF-8 byte order mark" • ModuleList
+
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    ModuleList        go to state 8
+    ModuleDefinition  go to state 6
+    TypeRefName       go to state 7
+
+
+State 4
+
+    0 $accept: ParsedGrammar • $end
+
+    $end  shift, and go to state 9
+
+
+State 5
+
+    2 ParsedGrammar: ModuleList •
+    4 ModuleList: ModuleList • ModuleDefinition
+
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    $default  reduce using rule 2 (ParsedGrammar)
+
+    ModuleDefinition  go to state 10
+    TypeRefName       go to state 7
+
+
+State 6
+
+    3 ModuleList: ModuleDefinition •
+
+    $default  reduce using rule 3 (ModuleList)
+
+
+State 7
+
+    6 ModuleDefinition: TypeRefName • $@1 optObjectIdentifier TOK_DEFINITIONS optModuleDefinitionFlags TOK_PPEQ TOK_BEGIN optModuleBody TOK_END
+
+    $default  reduce using rule 5 ($@1)
+
+    $@1  go to state 11
+
+
+State 8
+
+    1 ParsedGrammar: "UTF-8 byte order mark" ModuleList •
+    4 ModuleList: ModuleList • ModuleDefinition
+
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    $default  reduce using rule 1 (ParsedGrammar)
+
+    ModuleDefinition  go to state 10
+    TypeRefName       go to state 7
+
+
+State 9
+
+    0 $accept: ParsedGrammar $end •
+
+    $default  accept
+
+
+State 10
+
+    4 ModuleList: ModuleList ModuleDefinition •
+
+    $default  reduce using rule 4 (ModuleList)
+
+
+State 11
+
+    6 ModuleDefinition: TypeRefName $@1 • optObjectIdentifier TOK_DEFINITIONS optModuleDefinitionFlags TOK_PPEQ TOK_BEGIN optModuleBody TOK_END
+
+    '{'  shift, and go to state 12
+
+    $default  reduce using rule 7 (optObjectIdentifier)
+
+    optObjectIdentifier  go to state 13
+    ObjectIdentifier     go to state 14
+
+
+State 12
+
+    9 ObjectIdentifier: '{' • ObjectIdentifierBody '}'
+   10                 | '{' • '}'
+
+    "identifier"  shift, and go to state 15
+    "number"      shift, and go to state 16
+    '}'           shift, and go to state 17
+
+    ObjectIdentifierBody     go to state 18
+    ObjectIdentifierElement  go to state 19
+    Identifier               go to state 20
+
+
+State 13
+
+    6 ModuleDefinition: TypeRefName $@1 optObjectIdentifier • TOK_DEFINITIONS optModuleDefinitionFlags TOK_PPEQ TOK_BEGIN optModuleBody TOK_END
+
+    TOK_DEFINITIONS  shift, and go to state 21
+
+
+State 14
+
+    8 optObjectIdentifier: ObjectIdentifier •
+
+    $default  reduce using rule 8 (optObjectIdentifier)
+
+
+State 15
+
+  342 Identifier: "identifier" •
+
+    $default  reduce using rule 342 (Identifier)
+
+
+State 16
+
+   15 ObjectIdentifierElement: "number" •
+
+    $default  reduce using rule 15 (ObjectIdentifierElement)
+
+
+State 17
+
+   10 ObjectIdentifier: '{' '}' •
+
+    $default  reduce using rule 10 (ObjectIdentifier)
+
+
+State 18
+
+    9 ObjectIdentifier: '{' ObjectIdentifierBody • '}'
+   12 ObjectIdentifierBody: ObjectIdentifierBody • ObjectIdentifierElement
+
+    "identifier"  shift, and go to state 15
+    "number"      shift, and go to state 16
+    '}'           shift, and go to state 22
+
+    ObjectIdentifierElement  go to state 23
+    Identifier               go to state 20
+
+
+State 19
+
+   11 ObjectIdentifierBody: ObjectIdentifierElement •
+
+    $default  reduce using rule 11 (ObjectIdentifierBody)
+
+
+State 20
+
+   13 ObjectIdentifierElement: Identifier •
+   14                        | Identifier • '(' "number" ')'
+
+    '('  shift, and go to state 24
+
+    $default  reduce using rule 13 (ObjectIdentifierElement)
+
+
+State 21
+
+    6 ModuleDefinition: TypeRefName $@1 optObjectIdentifier TOK_DEFINITIONS • optModuleDefinitionFlags TOK_PPEQ TOK_BEGIN optModuleBody TOK_END
+
+    TOK_capitalreference  shift, and go to state 25
+    TOK_AUTOMATIC         shift, and go to state 26
+    TOK_EXPLICIT          shift, and go to state 27
+    TOK_EXTENSIBILITY     shift, and go to state 28
+    TOK_IMPLICIT          shift, and go to state 29
+
+    $default  reduce using rule 16 (optModuleDefinitionFlags)
+
+    optModuleDefinitionFlags  go to state 30
+    ModuleDefinitionFlags     go to state 31
+    ModuleDefinitionFlag      go to state 32
+
+
+State 22
+
+    9 ObjectIdentifier: '{' ObjectIdentifierBody '}' •
+
+    $default  reduce using rule 9 (ObjectIdentifier)
+
+
+State 23
+
+   12 ObjectIdentifierBody: ObjectIdentifierBody ObjectIdentifierElement •
+
+    $default  reduce using rule 12 (ObjectIdentifierBody)
+
+
+State 24
+
+   14 ObjectIdentifierElement: Identifier '(' • "number" ')'
+
+    "number"  shift, and go to state 33
+
+
+State 25
+
+   24 ModuleDefinitionFlag: TOK_capitalreference • TOK_INSTRUCTIONS
+
+    TOK_INSTRUCTIONS  shift, and go to state 34
+
+
+State 26
+
+   22 ModuleDefinitionFlag: TOK_AUTOMATIC • TOK_TAGS
+
+    TOK_TAGS  shift, and go to state 35
+
+
+State 27
+
+   20 ModuleDefinitionFlag: TOK_EXPLICIT • TOK_TAGS
+
+    TOK_TAGS  shift, and go to state 36
+
+
+State 28
+
+   23 ModuleDefinitionFlag: TOK_EXTENSIBILITY • TOK_IMPLIED
+
+    TOK_IMPLIED  shift, and go to state 37
+
+
+State 29
+
+   21 ModuleDefinitionFlag: TOK_IMPLICIT • TOK_TAGS
+
+    TOK_TAGS  shift, and go to state 38
+
+
+State 30
+
+    6 ModuleDefinition: TypeRefName $@1 optObjectIdentifier TOK_DEFINITIONS optModuleDefinitionFlags • TOK_PPEQ TOK_BEGIN optModuleBody TOK_END
+
+    TOK_PPEQ  shift, and go to state 39
+
+
+State 31
+
+   17 optModuleDefinitionFlags: ModuleDefinitionFlags •
+   19 ModuleDefinitionFlags: ModuleDefinitionFlags • ModuleDefinitionFlag
+
+    TOK_capitalreference  shift, and go to state 25
+    TOK_AUTOMATIC         shift, and go to state 26
+    TOK_EXPLICIT          shift, and go to state 27
+    TOK_EXTENSIBILITY     shift, and go to state 28
+    TOK_IMPLICIT          shift, and go to state 29
+
+    $default  reduce using rule 17 (optModuleDefinitionFlags)
+
+    ModuleDefinitionFlag  go to state 40
+
+
+State 32
+
+   18 ModuleDefinitionFlags: ModuleDefinitionFlag •
+
+    $default  reduce using rule 18 (ModuleDefinitionFlags)
+
+
+State 33
+
+   14 ObjectIdentifierElement: Identifier '(' "number" • ')'
+
+    ')'  shift, and go to state 41
+
+
+State 34
+
+   24 ModuleDefinitionFlag: TOK_capitalreference TOK_INSTRUCTIONS •
+
+    $default  reduce using rule 24 (ModuleDefinitionFlag)
+
+
+State 35
+
+   22 ModuleDefinitionFlag: TOK_AUTOMATIC TOK_TAGS •
+
+    $default  reduce using rule 22 (ModuleDefinitionFlag)
+
+
+State 36
+
+   20 ModuleDefinitionFlag: TOK_EXPLICIT TOK_TAGS •
+
+    $default  reduce using rule 20 (ModuleDefinitionFlag)
+
+
+State 37
+
+   23 ModuleDefinitionFlag: TOK_EXTENSIBILITY TOK_IMPLIED •
+
+    $default  reduce using rule 23 (ModuleDefinitionFlag)
+
+
+State 38
+
+   21 ModuleDefinitionFlag: TOK_IMPLICIT TOK_TAGS •
+
+    $default  reduce using rule 21 (ModuleDefinitionFlag)
+
+
+State 39
+
+    6 ModuleDefinition: TypeRefName $@1 optObjectIdentifier TOK_DEFINITIONS optModuleDefinitionFlags TOK_PPEQ • TOK_BEGIN optModuleBody TOK_END
+
+    TOK_BEGIN  shift, and go to state 42
+
+
+State 40
+
+   19 ModuleDefinitionFlags: ModuleDefinitionFlags ModuleDefinitionFlag •
+
+    $default  reduce using rule 19 (ModuleDefinitionFlags)
+
+
+State 41
+
+   14 ObjectIdentifierElement: Identifier '(' "number" ')' •
+
+    $default  reduce using rule 14 (ObjectIdentifierElement)
+
+
+State 42
+
+    6 ModuleDefinition: TypeRefName $@1 optObjectIdentifier TOK_DEFINITIONS optModuleDefinitionFlags TOK_PPEQ TOK_BEGIN • optModuleBody TOK_END
+
+    TOK_EXPORTS  shift, and go to state 43
+
+    TOK_END   reduce using rule 25 (optModuleBody)
+    $default  reduce using rule 54 (optExports)
+
+    optModuleBody      go to state 44
+    ModuleBody         go to state 45
+    optExports         go to state 46
+    ExportsDefinition  go to state 47
+
+
+State 43
+
+   56 ExportsDefinition: TOK_EXPORTS • ExportsBody ';'
+   57                  | TOK_EXPORTS • TOK_ALL ';'
+   58                  | TOK_EXPORTS • ';'
+
+    "identifier"          shift, and go to state 15
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+    TOK_ALL               shift, and go to state 48
+    ';'                   shift, and go to state 49
+
+    ExportsBody     go to state 50
+    ExportsElement  go to state 51
+    TypeRefName     go to state 52
+    Identifier      go to state 53
+
+
+State 44
+
+    6 ModuleDefinition: TypeRefName $@1 optObjectIdentifier TOK_DEFINITIONS optModuleDefinitionFlags TOK_PPEQ TOK_BEGIN optModuleBody • TOK_END
+
+    TOK_END  shift, and go to state 54
+
+
+State 45
+
+   26 optModuleBody: ModuleBody •
+
+    $default  reduce using rule 26 (optModuleBody)
+
+
+State 46
+
+   27 ModuleBody: optExports • optImports AssignmentList
+
+    TOK_IMPORTS  shift, and go to state 55
+
+    $default  reduce using rule 38 (optImports)
+
+    optImports         go to state 56
+    ImportsDefinition  go to state 57
+
+
+State 47
+
+   55 optExports: ExportsDefinition •
+
+    $default  reduce using rule 55 (optExports)
+
+
+State 48
+
+   57 ExportsDefinition: TOK_EXPORTS TOK_ALL • ';'
+
+    ';'  shift, and go to state 58
+
+
+State 49
+
+   58 ExportsDefinition: TOK_EXPORTS ';' •
+
+    $default  reduce using rule 58 (ExportsDefinition)
+
+
+State 50
+
+   56 ExportsDefinition: TOK_EXPORTS ExportsBody • ';'
+   60 ExportsBody: ExportsBody • ',' ExportsElement
+
+    ';'  shift, and go to state 59
+    ','  shift, and go to state 60
+
+
+State 51
+
+   59 ExportsBody: ExportsElement •
+
+    $default  reduce using rule 59 (ExportsBody)
+
+
+State 52
+
+   61 ExportsElement: TypeRefName •
+   62               | TypeRefName • '{' '}'
+
+    '{'  shift, and go to state 61
+
+    $default  reduce using rule 61 (ExportsElement)
+
+
+State 53
+
+   63 ExportsElement: Identifier •
+
+    $default  reduce using rule 63 (ExportsElement)
+
+
+State 54
+
+    6 ModuleDefinition: TypeRefName $@1 optObjectIdentifier TOK_DEFINITIONS optModuleDefinitionFlags TOK_PPEQ TOK_BEGIN optModuleBody TOK_END •
+
+    $default  reduce using rule 6 (ModuleDefinition)
+
+
+State 55
+
+   40 ImportsDefinition: TOK_IMPORTS • optImportsBundleSet ';'
+   41                  | TOK_IMPORTS • TOK_FROM
+
+    "identifier"          shift, and go to state 15
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+    TOK_FROM              shift, and go to state 62
+
+    $default  reduce using rule 42 (optImportsBundleSet)
+
+    optImportsBundleSet  go to state 63
+    ImportsBundleSet     go to state 64
+    ImportsBundle        go to state 65
+    ImportsList          go to state 66
+    ImportsElement       go to state 67
+    TypeRefName          go to state 68
+    Identifier           go to state 69
+
+
+State 56
+
+   27 ModuleBody: optExports optImports • AssignmentList
+
+    "identifier"          shift, and go to state 15
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+    TOK_BMPString         shift, and go to state 70
+    TOK_ENCODING_CONTROL  shift, and go to state 71
+    TOK_GeneralString     shift, and go to state 72
+    TOK_GraphicString     shift, and go to state 73
+    TOK_IA5String         shift, and go to state 74
+    TOK_ISO646String      shift, and go to state 75
+    TOK_NumericString     shift, and go to state 76
+    TOK_ObjectDescriptor  shift, and go to state 77
+    TOK_PrintableString   shift, and go to state 78
+    TOK_T61String         shift, and go to state 79
+    TOK_TeletexString     shift, and go to state 80
+    TOK_UniversalString   shift, and go to state 81
+    TOK_UTF8String        shift, and go to state 82
+    TOK_VideotexString    shift, and go to state 83
+    TOK_VisibleString     shift, and go to state 84
+
+    AssignmentList          go to state 85
+    Assignment              go to state 86
+    ValueSetTypeAssignment  go to state 87
+    DataTypeReference       go to state 88
+    ValueAssignment         go to state 89
+    BasicString             go to state 90
+    TypeRefName             go to state 91
+    Identifier              go to state 92
+
+
+State 57
+
+   39 optImports: ImportsDefinition •
+
+    $default  reduce using rule 39 (optImports)
+
+
+State 58
+
+   57 ExportsDefinition: TOK_EXPORTS TOK_ALL ';' •
+
+    $default  reduce using rule 57 (ExportsDefinition)
+
+
+State 59
+
+   56 ExportsDefinition: TOK_EXPORTS ExportsBody ';' •
+
+    $default  reduce using rule 56 (ExportsDefinition)
+
+
+State 60
+
+   60 ExportsBody: ExportsBody ',' • ExportsElement
+
+    "identifier"          shift, and go to state 15
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    ExportsElement  go to state 93
+    TypeRefName     go to state 52
+    Identifier      go to state 53
+
+
+State 61
+
+   62 ExportsElement: TypeRefName '{' • '}'
+
+    '}'  shift, and go to state 94
+
+
+State 62
+
+   41 ImportsDefinition: TOK_IMPORTS TOK_FROM •
+
+    $default  reduce using rule 41 (ImportsDefinition)
+
+
+State 63
+
+   40 ImportsDefinition: TOK_IMPORTS optImportsBundleSet • ';'
+
+    ';'  shift, and go to state 95
+
+
+State 64
+
+   43 optImportsBundleSet: ImportsBundleSet •
+   45 ImportsBundleSet: ImportsBundleSet • ImportsBundle
+
+    "identifier"          shift, and go to state 15
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    $default  reduce using rule 43 (optImportsBundleSet)
+
+    ImportsBundle   go to state 96
+    ImportsList     go to state 66
+    ImportsElement  go to state 67
+    TypeRefName     go to state 68
+    Identifier      go to state 69
+
+
+State 65
+
+   44 ImportsBundleSet: ImportsBundle •
+
+    $default  reduce using rule 44 (ImportsBundleSet)
+
+
+State 66
+
+   48 ImportsBundle: ImportsList • TOK_FROM TypeRefName AssignedIdentifier
+   50 ImportsList: ImportsList • ',' ImportsElement
+
+    TOK_FROM  shift, and go to state 97
+    ','       shift, and go to state 98
+
+
+State 67
+
+   49 ImportsList: ImportsElement •
+
+    $default  reduce using rule 49 (ImportsList)
+
+
+State 68
+
+   51 ImportsElement: TypeRefName •
+   52               | TypeRefName • '{' '}'
+
+    '{'  shift, and go to state 99
+
+    $default  reduce using rule 51 (ImportsElement)
+
+
+State 69
+
+   53 ImportsElement: Identifier •
+
+    $default  reduce using rule 53 (ImportsElement)
+
+
+State 70
+
+  200 BasicString: TOK_BMPString •
+
+    $default  reduce using rule 200 (BasicString)
+
+
+State 71
+
+   36 Assignment: TOK_ENCODING_CONTROL • TOK_capitalreference $@3
+
+    TOK_capitalreference  shift, and go to state 100
+
+
+State 72
+
+  201 BasicString: TOK_GeneralString •
+
+    $default  reduce using rule 201 (BasicString)
+
+
+State 73
+
+  202 BasicString: TOK_GraphicString •
+
+    $default  reduce using rule 202 (BasicString)
+
+
+State 74
+
+  203 BasicString: TOK_IA5String •
+
+    $default  reduce using rule 203 (BasicString)
+
+
+State 75
+
+  204 BasicString: TOK_ISO646String •
+
+    $default  reduce using rule 204 (BasicString)
+
+
+State 76
+
+  205 BasicString: TOK_NumericString •
+
+    $default  reduce using rule 205 (BasicString)
+
+
+State 77
+
+  213 BasicString: TOK_ObjectDescriptor •
+
+    $default  reduce using rule 213 (BasicString)
+
+
+State 78
+
+  206 BasicString: TOK_PrintableString •
+
+    $default  reduce using rule 206 (BasicString)
+
+
+State 79
+
+  207 BasicString: TOK_T61String •
+
+    $default  reduce using rule 207 (BasicString)
+
+
+State 80
+
+  208 BasicString: TOK_TeletexString •
+
+    $default  reduce using rule 208 (BasicString)
+
+
+State 81
+
+  209 BasicString: TOK_UniversalString •
+
+    $default  reduce using rule 209 (BasicString)
+
+
+State 82
+
+  210 BasicString: TOK_UTF8String •
+
+    $default  reduce using rule 210 (BasicString)
+
+
+State 83
+
+  211 BasicString: TOK_VideotexString •
+
+    $default  reduce using rule 211 (BasicString)
+
+
+State 84
+
+  212 BasicString: TOK_VisibleString •
+
+    $default  reduce using rule 212 (BasicString)
+
+
+State 85
+
+   27 ModuleBody: optExports optImports AssignmentList •
+   29 AssignmentList: AssignmentList • Assignment
+
+    "identifier"          shift, and go to state 15
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+    TOK_BMPString         shift, and go to state 70
+    TOK_ENCODING_CONTROL  shift, and go to state 71
+    TOK_GeneralString     shift, and go to state 72
+    TOK_GraphicString     shift, and go to state 73
+    TOK_IA5String         shift, and go to state 74
+    TOK_ISO646String      shift, and go to state 75
+    TOK_NumericString     shift, and go to state 76
+    TOK_ObjectDescriptor  shift, and go to state 77
+    TOK_PrintableString   shift, and go to state 78
+    TOK_T61String         shift, and go to state 79
+    TOK_TeletexString     shift, and go to state 80
+    TOK_UniversalString   shift, and go to state 81
+    TOK_UTF8String        shift, and go to state 82
+    TOK_VideotexString    shift, and go to state 83
+    TOK_VisibleString     shift, and go to state 84
+
+    $default  reduce using rule 27 (ModuleBody)
+
+    Assignment              go to state 101
+    ValueSetTypeAssignment  go to state 87
+    DataTypeReference       go to state 88
+    ValueAssignment         go to state 89
+    BasicString             go to state 90
+    TypeRefName             go to state 91
+    Identifier              go to state 92
+
+
+State 86
+
+   28 AssignmentList: Assignment •
+
+    $default  reduce using rule 28 (AssignmentList)
+
+
+State 87
+
+   34 Assignment: ValueSetTypeAssignment •
+
+    $default  reduce using rule 34 (Assignment)
+
+
+State 88
+
+   30 Assignment: DataTypeReference •
+
+    $default  reduce using rule 30 (Assignment)
+
+
+State 89
+
+   31 Assignment: ValueAssignment •
+
+    $default  reduce using rule 31 (Assignment)
+
+
+State 90
+
+   37 Assignment: BasicString •
+
+    $default  reduce using rule 37 (Assignment)
+
+
+State 91
+
+   33 Assignment: TypeRefName • TOK_capitalreference TOK_PPEQ '{' $@2 Opaque
+   65 ValueSetTypeAssignment: TypeRefName • Type TOK_PPEQ ValueSet
+   68 DataTypeReference: TypeRefName • TOK_PPEQ Type
+   69                  | TypeRefName • TOK_PPEQ ObjectClass
+   70                  | TypeRefName • '{' ParameterArgumentList '}' TOK_PPEQ Type
+   71                  | TypeRefName • '{' ParameterArgumentList '}' TOK_PPEQ ObjectClass
+
+    TOK_PPEQ              shift, and go to state 102
+    TOK_capitalreference  shift, and go to state 103
+    '{'                   shift, and go to state 104
+    '['                   shift, and go to state 105
+
+    TOK_capitalreference  [reduce using rule 327 (optTag)]
+    $default              reduce using rule 327 (optTag)
+
+    Type          go to state 106
+    TaggedType    go to state 107
+    optTag        go to state 108
+    Tag           go to state 109
+    TagTypeValue  go to state 110
+
+
+State 92
+
+  157 ValueAssignment: Identifier • Type TOK_PPEQ Value
+
+    '['  shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    Type          go to state 111
+    TaggedType    go to state 107
+    optTag        go to state 108
+    Tag           go to state 109
+    TagTypeValue  go to state 110
+
+
+State 93
+
+   60 ExportsBody: ExportsBody ',' ExportsElement •
+
+    $default  reduce using rule 60 (ExportsBody)
+
+
+State 94
+
+   62 ExportsElement: TypeRefName '{' '}' •
+
+    $default  reduce using rule 62 (ExportsElement)
+
+
+State 95
+
+   40 ImportsDefinition: TOK_IMPORTS optImportsBundleSet ';' •
+
+    $default  reduce using rule 40 (ImportsDefinition)
+
+
+State 96
+
+   45 ImportsBundleSet: ImportsBundleSet ImportsBundle •
+
+    $default  reduce using rule 45 (ImportsBundleSet)
+
+
+State 97
+
+   48 ImportsBundle: ImportsList TOK_FROM • TypeRefName AssignedIdentifier
+
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    TypeRefName  go to state 112
+
+
+State 98
+
+   50 ImportsList: ImportsList ',' • ImportsElement
+
+    "identifier"          shift, and go to state 15
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    ImportsElement  go to state 113
+    TypeRefName     go to state 68
+    Identifier      go to state 69
+
+
+State 99
+
+   52 ImportsElement: TypeRefName '{' • '}'
+
+    '}'  shift, and go to state 114
+
+
+State 100
+
+   36 Assignment: TOK_ENCODING_CONTROL TOK_capitalreference • $@3
+
+    $default  reduce using rule 35 ($@3)
+
+    $@3  go to state 115
+
+
+State 101
+
+   29 AssignmentList: AssignmentList Assignment •
+
+    $default  reduce using rule 29 (AssignmentList)
+
+
+State 102
+
+   68 DataTypeReference: TypeRefName TOK_PPEQ • Type
+   69                  | TypeRefName TOK_PPEQ • ObjectClass
+
+    TOK_CLASS  shift, and go to state 116
+    '['        shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    ObjectClass   go to state 117
+    Type          go to state 118
+    TaggedType    go to state 107
+    optTag        go to state 108
+    Tag           go to state 109
+    TagTypeValue  go to state 110
+
+
+State 103
+
+   33 Assignment: TypeRefName TOK_capitalreference • TOK_PPEQ '{' $@2 Opaque
+
+    TOK_PPEQ  shift, and go to state 119
+
+
+State 104
+
+   70 DataTypeReference: TypeRefName '{' • ParameterArgumentList '}' TOK_PPEQ Type
+   71                  | TypeRefName '{' • ParameterArgumentList '}' TOK_PPEQ ObjectClass
+
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+    TOK_BIT               shift, and go to state 120
+    TOK_BMPString         shift, and go to state 70
+    TOK_BOOLEAN           shift, and go to state 121
+    TOK_CHARACTER         shift, and go to state 122
+    TOK_EMBEDDED          shift, and go to state 123
+    TOK_ENUMERATED        shift, and go to state 124
+    TOK_EXTERNAL          shift, and go to state 125
+    TOK_GeneralizedTime   shift, and go to state 126
+    TOK_GeneralString     shift, and go to state 72
+    TOK_GraphicString     shift, and go to state 73
+    TOK_IA5String         shift, and go to state 74
+    TOK_INTEGER           shift, and go to state 127
+    TOK_ISO646String      shift, and go to state 75
+    TOK_NULL              shift, and go to state 128
+    TOK_NumericString     shift, and go to state 76
+    TOK_OBJECT            shift, and go to state 129
+    TOK_ObjectDescriptor  shift, and go to state 77
+    TOK_OCTET             shift, and go to state 130
+    TOK_PrintableString   shift, and go to state 78
+    TOK_REAL              shift, and go to state 131
+    TOK_RELATIVE_OID      shift, and go to state 132
+    TOK_T61String         shift, and go to state 79
+    TOK_TeletexString     shift, and go to state 80
+    TOK_UniversalString   shift, and go to state 81
+    TOK_UTCTime           shift, and go to state 133
+    TOK_UTF8String        shift, and go to state 82
+    TOK_VideotexString    shift, and go to state 83
+    TOK_VisibleString     shift, and go to state 84
+
+    ParameterArgumentList              go to state 134
+    ParameterArgumentName              go to state 135
+    BasicTypeId                        go to state 136
+    BasicTypeId_UniverationCompatible  go to state 137
+    BasicString                        go to state 138
+    TypeRefName                        go to state 139
+
+
+State 105
+
+  330 TagTypeValue: '[' • TagClass "number" ']'
+
+    TOK_APPLICATION  shift, and go to state 140
+    TOK_PRIVATE      shift, and go to state 141
+    TOK_UNIVERSAL    shift, and go to state 142
+
+    $default  reduce using rule 331 (TagClass)
+
+    TagClass  go to state 143
+
+
+State 106
+
+   65 ValueSetTypeAssignment: TypeRefName Type • TOK_PPEQ ValueSet
+
+    TOK_PPEQ  shift, and go to state 144
+
+
+State 107
+
+  125 Type: TaggedType •
+
+    $default  reduce using rule 125 (Type)
+
+
+State 108
+
+  126 TaggedType: optTag • UntaggedType
+
+    TOK_typereference        shift, and go to state 145
+    TOK_capitalreference     shift, and go to state 146
+    TOK_ExtValue_BIT_STRING  shift, and go to state 147
+    TOK_ANY                  shift, and go to state 148
+    TOK_BIT                  shift, and go to state 149
+    TOK_BMPString            shift, and go to state 70
+    TOK_BOOLEAN              shift, and go to state 121
+    TOK_CHARACTER            shift, and go to state 122
+    TOK_CHOICE               shift, and go to state 150
+    TOK_EMBEDDED             shift, and go to state 123
+    TOK_ENUMERATED           shift, and go to state 151
+    TOK_EXTERNAL             shift, and go to state 125
+    TOK_GeneralizedTime      shift, and go to state 126
+    TOK_GeneralString        shift, and go to state 72
+    TOK_GraphicString        shift, and go to state 73
+    TOK_IA5String            shift, and go to state 74
+    TOK_INSTANCE             shift, and go to state 152
+    TOK_INTEGER              shift, and go to state 153
+    TOK_ISO646String         shift, and go to state 75
+    TOK_NULL                 shift, and go to state 128
+    TOK_NumericString        shift, and go to state 76
+    TOK_OBJECT               shift, and go to state 129
+    TOK_ObjectDescriptor     shift, and go to state 77
+    TOK_OCTET                shift, and go to state 130
+    TOK_PrintableString      shift, and go to state 78
+    TOK_REAL                 shift, and go to state 131
+    TOK_RELATIVE_OID         shift, and go to state 132
+    TOK_SEQUENCE             shift, and go to state 154
+    TOK_SET                  shift, and go to state 155
+    TOK_T61String            shift, and go to state 79
+    TOK_TeletexString        shift, and go to state 80
+    TOK_UniversalString      shift, and go to state 81
+    TOK_UTCTime              shift, and go to state 133
+    TOK_UTF8String           shift, and go to state 82
+    TOK_VideotexString       shift, and go to state 83
+    TOK_VisibleString        shift, and go to state 84
+
+    DefinedType                        go to state 156
+    UntaggedType                       go to state 157
+    TypeDeclaration                    go to state 158
+    ConcreteTypeDeclaration            go to state 159
+    ComplexTypeReference               go to state 160
+    BasicTypeId                        go to state 161
+    BasicTypeId_UniverationCompatible  go to state 137
+    BuiltinType                        go to state 162
+    BasicString                        go to state 138
+
+
+State 109
+
+  328 optTag: Tag •
+
+    $default  reduce using rule 328 (optTag)
+
+
+State 110
+
+  329 Tag: TagTypeValue • TagPlicit
+
+    TOK_EXPLICIT  shift, and go to state 163
+    TOK_IMPLICIT  shift, and go to state 164
+
+    $default  reduce using rule 335 (TagPlicit)
+
+    TagPlicit  go to state 165
+
+
+State 111
+
+  157 ValueAssignment: Identifier Type • TOK_PPEQ Value
+
+    TOK_PPEQ  shift, and go to state 166
+
+
+State 112
+
+   48 ImportsBundle: ImportsList TOK_FROM TypeRefName • AssignedIdentifier
+
+    '{'  shift, and go to state 12
+
+    $default  reduce using rule 46 (AssignedIdentifier)
+
+    ObjectIdentifier    go to state 167
+    AssignedIdentifier  go to state 168
+
+
+State 113
+
+   50 ImportsList: ImportsList ',' ImportsElement •
+
+    $default  reduce using rule 50 (ImportsList)
+
+
+State 114
+
+   52 ImportsElement: TypeRefName '{' '}' •
+
+    $default  reduce using rule 52 (ImportsElement)
+
+
+State 115
+
+   36 Assignment: TOK_ENCODING_CONTROL TOK_capitalreference $@3 •
+
+    $default  reduce using rule 36 (Assignment)
+
+
+State 116
+
+  100 ObjectClass: TOK_CLASS • '{' FieldSpec '}' optWithSyntax
+
+    '{'  shift, and go to state 169
+
+
+State 117
+
+   69 DataTypeReference: TypeRefName TOK_PPEQ ObjectClass •
+
+    $default  reduce using rule 69 (DataTypeReference)
+
+
+State 118
+
+   68 DataTypeReference: TypeRefName TOK_PPEQ Type •
+
+    $default  reduce using rule 68 (DataTypeReference)
+
+
+State 119
+
+   33 Assignment: TypeRefName TOK_capitalreference TOK_PPEQ • '{' $@2 Opaque
+
+    '{'  shift, and go to state 170
+
+
+State 120
+
+  193 BasicTypeId_UniverationCompatible: TOK_BIT • TOK_STRING
+
+    TOK_STRING  shift, and go to state 171
+
+
+State 121
+
+  178 BasicTypeId: TOK_BOOLEAN •
+
+    $default  reduce using rule 178 (BasicTypeId)
+
+
+State 122
+
+  186 BasicTypeId: TOK_CHARACTER • TOK_STRING
+
+    TOK_STRING  shift, and go to state 172
+
+
+State 123
+
+  185 BasicTypeId: TOK_EMBEDDED • TOK_PDV
+
+    TOK_PDV  shift, and go to state 173
+
+
+State 124
+
+  192 BasicTypeId_UniverationCompatible: TOK_ENUMERATED •
+
+    $default  reduce using rule 192 (BasicTypeId_UniverationCompatible)
+
+
+State 125
+
+  184 BasicTypeId: TOK_EXTERNAL •
+
+    $default  reduce using rule 184 (BasicTypeId)
+
+
+State 126
+
+  188 BasicTypeId: TOK_GeneralizedTime •
+
+    $default  reduce using rule 188 (BasicTypeId)
+
+
+State 127
+
+  191 BasicTypeId_UniverationCompatible: TOK_INTEGER •
+
+    $default  reduce using rule 191 (BasicTypeId_UniverationCompatible)
+
+
+State 128
+
+  179 BasicTypeId: TOK_NULL •
+
+    $default  reduce using rule 179 (BasicTypeId)
+
+
+State 129
+
+  182 BasicTypeId: TOK_OBJECT • TOK_IDENTIFIER
+
+    TOK_IDENTIFIER  shift, and go to state 174
+
+
+State 130
+
+  181 BasicTypeId: TOK_OCTET • TOK_STRING
+
+    TOK_STRING  shift, and go to state 175
+
+
+State 131
+
+  180 BasicTypeId: TOK_REAL •
+
+    $default  reduce using rule 180 (BasicTypeId)
+
+
+State 132
+
+  183 BasicTypeId: TOK_RELATIVE_OID •
+
+    $default  reduce using rule 183 (BasicTypeId)
+
+
+State 133
+
+  187 BasicTypeId: TOK_UTCTime •
+
+    $default  reduce using rule 187 (BasicTypeId)
+
+
+State 134
+
+   70 DataTypeReference: TypeRefName '{' ParameterArgumentList • '}' TOK_PPEQ Type
+   71                  | TypeRefName '{' ParameterArgumentList • '}' TOK_PPEQ ObjectClass
+   73 ParameterArgumentList: ParameterArgumentList • ',' ParameterArgumentName
+
+    '}'  shift, and go to state 176
+    ','  shift, and go to state 177
+
+
+State 135
+
+   72 ParameterArgumentList: ParameterArgumentName •
+
+    $default  reduce using rule 72 (ParameterArgumentList)
+
+
+State 136
+
+   77 ParameterArgumentName: BasicTypeId • ':' Identifier
+   78                      | BasicTypeId • ':' TypeRefName
+
+    ':'  shift, and go to state 178
+
+
+State 137
+
+  190 BasicTypeId: BasicTypeId_UniverationCompatible •
+
+    $default  reduce using rule 190 (BasicTypeId)
+
+
+State 138
+
+  189 BasicTypeId: BasicString •
+
+    $default  reduce using rule 189 (BasicTypeId)
+
+
+State 139
+
+   74 ParameterArgumentName: TypeRefName •
+   75                      | TypeRefName • ':' Identifier
+   76                      | TypeRefName • ':' TypeRefName
+
+    ':'  shift, and go to state 179
+
+    $default  reduce using rule 74 (ParameterArgumentName)
+
+
+State 140
+
+  333 TagClass: TOK_APPLICATION •
+
+    $default  reduce using rule 333 (TagClass)
+
+
+State 141
+
+  334 TagClass: TOK_PRIVATE •
+
+    $default  reduce using rule 334 (TagClass)
+
+
+State 142
+
+  332 TagClass: TOK_UNIVERSAL •
+
+    $default  reduce using rule 332 (TagClass)
+
+
+State 143
+
+  330 TagTypeValue: '[' TagClass • "number" ']'
+
+    "number"  shift, and go to state 180
+
+
+State 144
+
+   65 ValueSetTypeAssignment: TypeRefName Type TOK_PPEQ • ValueSet
+
+    '{'  shift, and go to state 181
+
+    ValueSet  go to state 182
+
+
+State 145
+
+  143 ComplexTypeReference: TOK_typereference •
+  145                     | TOK_typereference • '.' TypeRefName
+
+    '.'  shift, and go to state 183
+
+    $default  reduce using rule 143 (ComplexTypeReference)
+
+
+State 146
+
+  144 ComplexTypeReference: TOK_capitalreference •
+  146                     | TOK_capitalreference • '.' TypeRefName
+  147                     | TOK_capitalreference • '.' ComplexTypeReferenceAmpList
+
+    '.'  shift, and go to state 184
+
+    $default  reduce using rule 144 (ComplexTypeReference)
+
+
+State 147
+
+  198 BuiltinType: TOK_ExtValue_BIT_STRING • '{' IdentifierList '}'
+  199            | TOK_ExtValue_BIT_STRING • '{' '}'
+
+    '{'  shift, and go to state 185
+
+
+State 148
+
+  140 ConcreteTypeDeclaration: TOK_ANY •
+  141                        | TOK_ANY • TOK_DEFINED TOK_BY Identifier
+
+    TOK_DEFINED  shift, and go to state 186
+
+    $default  reduce using rule 140 (ConcreteTypeDeclaration)
+
+
+State 149
+
+  193 BasicTypeId_UniverationCompatible: TOK_BIT • TOK_STRING
+  197 BuiltinType: TOK_BIT • TOK_STRING '{' NamedBitList '}'
+
+    TOK_STRING  shift, and go to state 187
+
+
+State 150
+
+  135 ConcreteTypeDeclaration: TOK_CHOICE • '{' AlternativeTypeLists '}'
+
+    '{'  shift, and go to state 188
+
+
+State 151
+
+  192 BasicTypeId_UniverationCompatible: TOK_ENUMERATED •
+  196 BuiltinType: TOK_ENUMERATED • '{' Enumerations '}'
+
+    '{'  shift, and go to state 189
+
+    $default  reduce using rule 192 (BasicTypeId_UniverationCompatible)
+
+
+State 152
+
+  142 ConcreteTypeDeclaration: TOK_INSTANCE • TOK_OF ComplexTypeReference
+
+    TOK_OF  shift, and go to state 190
+
+
+State 153
+
+  191 BasicTypeId_UniverationCompatible: TOK_INTEGER •
+  195 BuiltinType: TOK_INTEGER • '{' NamedNumberList '}'
+
+    '{'  shift, and go to state 191
+
+    $default  reduce using rule 191 (BasicTypeId_UniverationCompatible)
+
+
+State 154
+
+  136 ConcreteTypeDeclaration: TOK_SEQUENCE • '{' optComponentTypeLists '}'
+  138                        | TOK_SEQUENCE • optSizeOrConstraint TOK_OF optIdentifier optTag MaybeIndirectTypeDeclaration
+
+    TOK_SIZE  shift, and go to state 192
+    '{'       shift, and go to state 193
+    '('       shift, and go to state 194
+
+    $default  reduce using rule 222 (optSizeOrConstraint)
+
+    optSizeOrConstraint  go to state 195
+    Constraint           go to state 196
+    SizeConstraint       go to state 197
+
+
+State 155
+
+  137 ConcreteTypeDeclaration: TOK_SET • '{' optComponentTypeLists '}'
+  139                        | TOK_SET • optSizeOrConstraint TOK_OF optIdentifier optTag MaybeIndirectTypeDeclaration
+
+    TOK_SIZE  shift, and go to state 192
+    '{'       shift, and go to state 198
+    '('       shift, and go to state 194
+
+    $default  reduce using rule 222 (optSizeOrConstraint)
+
+    optSizeOrConstraint  go to state 199
+    Constraint           go to state 196
+    SizeConstraint       go to state 197
+
+
+State 156
+
+  133 TypeDeclaration: DefinedType •
+
+    $default  reduce using rule 133 (TypeDeclaration)
+
+
+State 157
+
+  126 TaggedType: optTag UntaggedType •
+
+    $default  reduce using rule 126 (TaggedType)
+
+
+State 158
+
+  128 UntaggedType: TypeDeclaration • optManyConstraints
+
+    '('  shift, and go to state 194
+
+    $default  reduce using rule 220 (optManyConstraints)
+
+    optManyConstraints  go to state 200
+    Constraint          go to state 201
+    ManyConstraints     go to state 202
+
+
+State 159
+
+  132 TypeDeclaration: ConcreteTypeDeclaration •
+
+    $default  reduce using rule 132 (TypeDeclaration)
+
+
+State 160
+
+   66 DefinedType: ComplexTypeReference •
+   67            | ComplexTypeReference • '{' ActualParameterList '}'
+
+    '{'  shift, and go to state 203
+
+    $default  reduce using rule 66 (DefinedType)
+
+
+State 161
+
+  194 BuiltinType: BasicTypeId •
+
+    $default  reduce using rule 194 (BuiltinType)
+
+
+State 162
+
+  134 ConcreteTypeDeclaration: BuiltinType •
+
+    $default  reduce using rule 134 (ConcreteTypeDeclaration)
+
+
+State 163
+
+  337 TagPlicit: TOK_EXPLICIT •
+
+    $default  reduce using rule 337 (TagPlicit)
+
+
+State 164
+
+  336 TagPlicit: TOK_IMPLICIT •
+
+    $default  reduce using rule 336 (TagPlicit)
+
+
+State 165
+
+  329 Tag: TagTypeValue TagPlicit •
+
+    $default  reduce using rule 329 (Tag)
+
+
+State 166
+
+  157 ValueAssignment: Identifier Type TOK_PPEQ • Value
+
+    TOK_bstring           shift, and go to state 204
+    TOK_cstring           shift, and go to state 205
+    TOK_hstring           shift, and go to state 206
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_realnumber        shift, and go to state 209
+    TOK_tuple             shift, and go to state 210
+    TOK_quadruple         shift, and go to state 211
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+    TOK_FALSE             shift, and go to state 212
+    TOK_NULL              shift, and go to state 213
+    TOK_TRUE              shift, and go to state 214
+    '{'                   shift, and go to state 215
+
+    Value                           go to state 216
+    SimpleValue                     go to state 217
+    DefinedValue                    go to state 218
+    RestrictedCharacterStringValue  go to state 219
+    BitStringValue                  go to state 220
+    SignedNumber                    go to state 221
+    RealValue                       go to state 222
+    TypeRefName                     go to state 223
+    Identifier                      go to state 224
+    IdentifierAsReference           go to state 225
+    IdentifierAsValue               go to state 226
+
+
+State 167
+
+   47 AssignedIdentifier: ObjectIdentifier •
+
+    $default  reduce using rule 47 (AssignedIdentifier)
+
+
+State 168
+
+   48 ImportsBundle: ImportsList TOK_FROM TypeRefName AssignedIdentifier •
+
+    $default  reduce using rule 48 (ImportsBundle)
+
+
+State 169
+
+  100 ObjectClass: TOK_CLASS '{' • FieldSpec '}' optWithSyntax
+
+    TOK_typefieldreference   shift, and go to state 227
+    TOK_valuefieldreference  shift, and go to state 228
+
+    FieldSpec   go to state 229
+    ClassField  go to state 230
+
+
+State 170
+
+   33 Assignment: TypeRefName TOK_capitalreference TOK_PPEQ '{' • $@2 Opaque
+
+    $default  reduce using rule 32 ($@2)
+
+    $@2  go to state 231
+
+
+State 171
+
+  193 BasicTypeId_UniverationCompatible: TOK_BIT TOK_STRING •
+
+    $default  reduce using rule 193 (BasicTypeId_UniverationCompatible)
+
+
+State 172
+
+  186 BasicTypeId: TOK_CHARACTER TOK_STRING •
+
+    $default  reduce using rule 186 (BasicTypeId)
+
+
+State 173
+
+  185 BasicTypeId: TOK_EMBEDDED TOK_PDV •
+
+    $default  reduce using rule 185 (BasicTypeId)
+
+
+State 174
+
+  182 BasicTypeId: TOK_OBJECT TOK_IDENTIFIER •
+
+    $default  reduce using rule 182 (BasicTypeId)
+
+
+State 175
+
+  181 BasicTypeId: TOK_OCTET TOK_STRING •
+
+    $default  reduce using rule 181 (BasicTypeId)
+
+
+State 176
+
+   70 DataTypeReference: TypeRefName '{' ParameterArgumentList '}' • TOK_PPEQ Type
+   71                  | TypeRefName '{' ParameterArgumentList '}' • TOK_PPEQ ObjectClass
+
+    TOK_PPEQ  shift, and go to state 232
+
+
+State 177
+
+   73 ParameterArgumentList: ParameterArgumentList ',' • ParameterArgumentName
+
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+    TOK_BIT               shift, and go to state 120
+    TOK_BMPString         shift, and go to state 70
+    TOK_BOOLEAN           shift, and go to state 121
+    TOK_CHARACTER         shift, and go to state 122
+    TOK_EMBEDDED          shift, and go to state 123
+    TOK_ENUMERATED        shift, and go to state 124
+    TOK_EXTERNAL          shift, and go to state 125
+    TOK_GeneralizedTime   shift, and go to state 126
+    TOK_GeneralString     shift, and go to state 72
+    TOK_GraphicString     shift, and go to state 73
+    TOK_IA5String         shift, and go to state 74
+    TOK_INTEGER           shift, and go to state 127
+    TOK_ISO646String      shift, and go to state 75
+    TOK_NULL              shift, and go to state 128
+    TOK_NumericString     shift, and go to state 76
+    TOK_OBJECT            shift, and go to state 129
+    TOK_ObjectDescriptor  shift, and go to state 77
+    TOK_OCTET             shift, and go to state 130
+    TOK_PrintableString   shift, and go to state 78
+    TOK_REAL              shift, and go to state 131
+    TOK_RELATIVE_OID      shift, and go to state 132
+    TOK_T61String         shift, and go to state 79
+    TOK_TeletexString     shift, and go to state 80
+    TOK_UniversalString   shift, and go to state 81
+    TOK_UTCTime           shift, and go to state 133
+    TOK_UTF8String        shift, and go to state 82
+    TOK_VideotexString    shift, and go to state 83
+    TOK_VisibleString     shift, and go to state 84
+
+    ParameterArgumentName              go to state 233
+    BasicTypeId                        go to state 136
+    BasicTypeId_UniverationCompatible  go to state 137
+    BasicString                        go to state 138
+    TypeRefName                        go to state 139
+
+
+State 178
+
+   77 ParameterArgumentName: BasicTypeId ':' • Identifier
+   78                      | BasicTypeId ':' • TypeRefName
+
+    "identifier"          shift, and go to state 15
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    TypeRefName  go to state 234
+    Identifier   go to state 235
+
+
+State 179
+
+   75 ParameterArgumentName: TypeRefName ':' • Identifier
+   76                      | TypeRefName ':' • TypeRefName
+
+    "identifier"          shift, and go to state 15
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    TypeRefName  go to state 236
+    Identifier   go to state 237
+
+
+State 180
+
+  330 TagTypeValue: '[' TagClass "number" • ']'
+
+    ']'  shift, and go to state 238
+
+
+State 181
+
+   64 ValueSet: '{' • ElementSetSpecs '}'
+
+    TOK_bstring           shift, and go to state 204
+    TOK_cstring           shift, and go to state 205
+    TOK_hstring           shift, and go to state 206
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_realnumber        shift, and go to state 209
+    TOK_tuple             shift, and go to state 210
+    TOK_quadruple         shift, and go to state 211
+    TOK_typereference     shift, and go to state 239
+    TOK_capitalreference  shift, and go to state 240
+    TOK_ALL               shift, and go to state 241
+    TOK_FALSE             shift, and go to state 212
+    TOK_FROM              shift, and go to state 242
+    TOK_INCLUDES          shift, and go to state 243
+    TOK_MIN               shift, and go to state 244
+    TOK_NULL              shift, and go to state 213
+    TOK_PATTERN           shift, and go to state 245
+    TOK_SIZE              shift, and go to state 192
+    TOK_TRUE              shift, and go to state 214
+    TOK_WITH              shift, and go to state 246
+    "..."                 shift, and go to state 247
+    '{'                   shift, and go to state 215
+    '('                   shift, and go to state 248
+
+    DefinedType                     go to state 249
+    DefinedUntaggedType             go to state 250
+    ComplexTypeReference            go to state 160
+    Value                           go to state 251
+    SimpleValue                     go to state 217
+    DefinedValue                    go to state 218
+    RestrictedCharacterStringValue  go to state 219
+    ElementSetSpecs                 go to state 252
+    ElementSetSpec                  go to state 253
+    Unions                          go to state 254
+    Intersections                   go to state 255
+    IntersectionElements            go to state 256
+    Elements                        go to state 257
+    SubtypeElements                 go to state 258
+    PermittedAlphabet               go to state 259
+    SizeConstraint                  go to state 260
+    PatternConstraint               go to state 261
+    ValueRange                      go to state 262
+    LowerEndValue                   go to state 263
+    SingleValue                     go to state 264
+    BitStringValue                  go to state 220
+    ContainedSubtype                go to state 265
+    InnerTypeConstraints            go to state 266
+    SignedNumber                    go to state 221
+    RealValue                       go to state 222
+    TypeRefName                     go to state 223
+    Identifier                      go to state 224
+    IdentifierAsReference           go to state 225
+    IdentifierAsValue               go to state 226
+
+
+State 182
+
+   65 ValueSetTypeAssignment: TypeRefName Type TOK_PPEQ ValueSet •
+
+    $default  reduce using rule 65 (ValueSetTypeAssignment)
+
+
+State 183
+
+  145 ComplexTypeReference: TOK_typereference '.' • TypeRefName
+
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    TypeRefName  go to state 267
+
+
+State 184
+
+  146 ComplexTypeReference: TOK_capitalreference '.' • TypeRefName
+  147                     | TOK_capitalreference '.' • ComplexTypeReferenceAmpList
+
+    TOK_typereference        shift, and go to state 1
+    TOK_capitalreference     shift, and go to state 2
+    TOK_typefieldreference   shift, and go to state 268
+    TOK_valuefieldreference  shift, and go to state 269
+
+    ComplexTypeReferenceAmpList  go to state 270
+    ComplexTypeReferenceElement  go to state 271
+    PrimitiveFieldReference      go to state 272
+    TypeRefName                  go to state 273
+
+
+State 185
+
+  198 BuiltinType: TOK_ExtValue_BIT_STRING '{' • IdentifierList '}'
+  199            | TOK_ExtValue_BIT_STRING '{' • '}'
+
+    "identifier"  shift, and go to state 15
+    '}'           shift, and go to state 274
+
+    IdentifierList     go to state 275
+    IdentifierElement  go to state 276
+    Identifier         go to state 277
+
+
+State 186
+
+  141 ConcreteTypeDeclaration: TOK_ANY TOK_DEFINED • TOK_BY Identifier
+
+    TOK_BY  shift, and go to state 278
+
+
+State 187
+
+  193 BasicTypeId_UniverationCompatible: TOK_BIT TOK_STRING •
+  197 BuiltinType: TOK_BIT TOK_STRING • '{' NamedBitList '}'
+
+    '{'  shift, and go to state 279
+
+    $default  reduce using rule 193 (BasicTypeId_UniverationCompatible)
+
+
+State 188
+
+  135 ConcreteTypeDeclaration: TOK_CHOICE '{' • AlternativeTypeLists '}'
+
+    "identifier"  shift, and go to state 15
+    "..."         shift, and go to state 280
+    '['           shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    AlternativeTypeLists     go to state 281
+    AlternativeType          go to state 282
+    ExtensionAndException    go to state 283
+    MaybeIndirectTaggedType  go to state 284
+    optTag                   go to state 285
+    Tag                      go to state 109
+    TagTypeValue             go to state 110
+    Identifier               go to state 286
+
+
+State 189
+
+  196 BuiltinType: TOK_ENUMERATED '{' • Enumerations '}'
+
+    "identifier"       shift, and go to state 15
+    "number"           shift, and go to state 207
+    "negative number"  shift, and go to state 208
+    "..."              shift, and go to state 287
+
+    Enumerations        go to state 288
+    UniverationList     go to state 289
+    UniverationElement  go to state 290
+    SignedNumber        go to state 291
+    Identifier          go to state 292
+
+
+State 190
+
+  142 ConcreteTypeDeclaration: TOK_INSTANCE TOK_OF • ComplexTypeReference
+
+    TOK_typereference     shift, and go to state 145
+    TOK_capitalreference  shift, and go to state 146
+
+    ComplexTypeReference  go to state 293
+
+
+State 191
+
+  195 BuiltinType: TOK_INTEGER '{' • NamedNumberList '}'
+
+    "identifier"  shift, and go to state 15
+
+    NamedNumberList  go to state 294
+    NamedNumber      go to state 295
+    Identifier       go to state 296
+
+
+State 192
+
+  253 SizeConstraint: TOK_SIZE • Constraint
+
+    '('  shift, and go to state 194
+
+    Constraint  go to state 297
+
+
+State 193
+
+  136 ConcreteTypeDeclaration: TOK_SEQUENCE '{' • optComponentTypeLists '}'
+
+    "identifier"    shift, and go to state 15
+    TOK_COMPONENTS  shift, and go to state 298
+    "..."           shift, and go to state 280
+    '['             shift, and go to state 105
+
+    '}'       reduce using rule 85 (optComponentTypeLists)
+    $default  reduce using rule 327 (optTag)
+
+    optComponentTypeLists    go to state 299
+    ComponentTypeLists       go to state 300
+    ComponentType            go to state 301
+    ExtensionAndException    go to state 302
+    MaybeIndirectTaggedType  go to state 303
+    optTag                   go to state 285
+    Tag                      go to state 109
+    TagTypeValue             go to state 110
+    Identifier               go to state 304
+
+
+State 194
+
+  225 Constraint: '(' • ConstraintSpec ')'
+
+    TOK_bstring           shift, and go to state 204
+    TOK_cstring           shift, and go to state 205
+    TOK_hstring           shift, and go to state 206
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_realnumber        shift, and go to state 209
+    TOK_tuple             shift, and go to state 210
+    TOK_quadruple         shift, and go to state 211
+    TOK_typereference     shift, and go to state 239
+    TOK_capitalreference  shift, and go to state 240
+    TOK_ALL               shift, and go to state 241
+    TOK_CONSTRAINED       shift, and go to state 305
+    TOK_CONTAINING        shift, and go to state 306
+    TOK_FALSE             shift, and go to state 212
+    TOK_FROM              shift, and go to state 242
+    TOK_INCLUDES          shift, and go to state 243
+    TOK_MIN               shift, and go to state 244
+    TOK_NULL              shift, and go to state 213
+    TOK_PATTERN           shift, and go to state 245
+    TOK_SIZE              shift, and go to state 192
+    TOK_TRUE              shift, and go to state 214
+    TOK_WITH              shift, and go to state 246
+    "..."                 shift, and go to state 247
+    '{'                   shift, and go to state 307
+    '('                   shift, and go to state 248
+
+    DefinedType                     go to state 249
+    DefinedUntaggedType             go to state 250
+    ComplexTypeReference            go to state 160
+    Value                           go to state 251
+    SimpleValue                     go to state 217
+    DefinedValue                    go to state 218
+    RestrictedCharacterStringValue  go to state 219
+    ConstraintSpec                  go to state 308
+    SubtypeConstraint               go to state 309
+    ElementSetSpecs                 go to state 310
+    ElementSetSpec                  go to state 253
+    Unions                          go to state 254
+    Intersections                   go to state 255
+    IntersectionElements            go to state 256
+    Elements                        go to state 257
+    SubtypeElements                 go to state 258
+    PermittedAlphabet               go to state 259
+    SizeConstraint                  go to state 260
+    PatternConstraint               go to state 261
+    ValueRange                      go to state 262
+    LowerEndValue                   go to state 263
+    SingleValue                     go to state 264
+    BitStringValue                  go to state 220
+    ContainedSubtype                go to state 265
+    InnerTypeConstraints            go to state 266
+    GeneralConstraint               go to state 311
+    UserDefinedConstraint           go to state 312
+    ContentsConstraint              go to state 313
+    TableConstraint                 go to state 314
+    SimpleTableConstraint           go to state 315
+    ComponentRelationConstraint     go to state 316
+    SignedNumber                    go to state 221
+    RealValue                       go to state 222
+    TypeRefName                     go to state 223
+    Identifier                      go to state 224
+    IdentifierAsReference           go to state 225
+    IdentifierAsValue               go to state 226
+
+
+State 195
+
+  138 ConcreteTypeDeclaration: TOK_SEQUENCE optSizeOrConstraint • TOK_OF optIdentifier optTag MaybeIndirectTypeDeclaration
+
+    TOK_OF  shift, and go to state 317
+
+
+State 196
+
+  223 optSizeOrConstraint: Constraint •
+
+    $default  reduce using rule 223 (optSizeOrConstraint)
+
+
+State 197
+
+  224 optSizeOrConstraint: SizeConstraint •
+
+    $default  reduce using rule 224 (optSizeOrConstraint)
+
+
+State 198
+
+  137 ConcreteTypeDeclaration: TOK_SET '{' • optComponentTypeLists '}'
+
+    "identifier"    shift, and go to state 15
+    TOK_COMPONENTS  shift, and go to state 298
+    "..."           shift, and go to state 280
+    '['             shift, and go to state 105
+
+    '}'       reduce using rule 85 (optComponentTypeLists)
+    $default  reduce using rule 327 (optTag)
+
+    optComponentTypeLists    go to state 318
+    ComponentTypeLists       go to state 300
+    ComponentType            go to state 301
+    ExtensionAndException    go to state 302
+    MaybeIndirectTaggedType  go to state 303
+    optTag                   go to state 285
+    Tag                      go to state 109
+    TagTypeValue             go to state 110
+    Identifier               go to state 304
+
+
+State 199
+
+  139 ConcreteTypeDeclaration: TOK_SET optSizeOrConstraint • TOK_OF optIdentifier optTag MaybeIndirectTypeDeclaration
+
+    TOK_OF  shift, and go to state 319
+
+
+State 200
+
+  128 UntaggedType: TypeDeclaration optManyConstraints •
+
+    $default  reduce using rule 128 (UntaggedType)
+
+
+State 201
+
+  226 ManyConstraints: Constraint •
+
+    $default  reduce using rule 226 (ManyConstraints)
+
+
+State 202
+
+  221 optManyConstraints: ManyConstraints •
+  227 ManyConstraints: ManyConstraints • Constraint
+
+    '('  shift, and go to state 194
+
+    $default  reduce using rule 221 (optManyConstraints)
+
+    Constraint  go to state 320
+
+
+State 203
+
+   67 DefinedType: ComplexTypeReference '{' • ActualParameterList '}'
+
+    TOK_bstring              shift, and go to state 204
+    TOK_cstring              shift, and go to state 205
+    TOK_hstring              shift, and go to state 206
+    "identifier"             shift, and go to state 15
+    "number"                 shift, and go to state 207
+    "negative number"        shift, and go to state 208
+    TOK_realnumber           shift, and go to state 209
+    TOK_tuple                shift, and go to state 210
+    TOK_quadruple            shift, and go to state 211
+    TOK_typereference        shift, and go to state 239
+    TOK_capitalreference     shift, and go to state 240
+    TOK_ExtValue_BIT_STRING  shift, and go to state 147
+    TOK_ANY                  shift, and go to state 148
+    TOK_BIT                  shift, and go to state 149
+    TOK_BMPString            shift, and go to state 70
+    TOK_BOOLEAN              shift, and go to state 121
+    TOK_CHARACTER            shift, and go to state 122
+    TOK_CHOICE               shift, and go to state 150
+    TOK_EMBEDDED             shift, and go to state 123
+    TOK_ENUMERATED           shift, and go to state 151
+    TOK_EXTERNAL             shift, and go to state 125
+    TOK_FALSE                shift, and go to state 212
+    TOK_GeneralizedTime      shift, and go to state 126
+    TOK_GeneralString        shift, and go to state 72
+    TOK_GraphicString        shift, and go to state 73
+    TOK_IA5String            shift, and go to state 74
+    TOK_INSTANCE             shift, and go to state 152
+    TOK_INTEGER              shift, and go to state 153
+    TOK_ISO646String         shift, and go to state 75
+    TOK_NULL                 shift, and go to state 321
+    TOK_NumericString        shift, and go to state 76
+    TOK_OBJECT               shift, and go to state 129
+    TOK_ObjectDescriptor     shift, and go to state 77
+    TOK_OCTET                shift, and go to state 130
+    TOK_PrintableString      shift, and go to state 78
+    TOK_REAL                 shift, and go to state 131
+    TOK_RELATIVE_OID         shift, and go to state 132
+    TOK_SEQUENCE             shift, and go to state 154
+    TOK_SET                  shift, and go to state 155
+    TOK_T61String            shift, and go to state 79
+    TOK_TeletexString        shift, and go to state 80
+    TOK_TRUE                 shift, and go to state 214
+    TOK_UniversalString      shift, and go to state 81
+    TOK_UTCTime              shift, and go to state 133
+    TOK_UTF8String           shift, and go to state 82
+    TOK_VideotexString       shift, and go to state 83
+    TOK_VisibleString        shift, and go to state 84
+    '{'                      shift, and go to state 181
+
+    ValueSet                           go to state 322
+    DefinedType                        go to state 156
+    ActualParameterList                go to state 323
+    ActualParameter                    go to state 324
+    UntaggedType                       go to state 325
+    TypeDeclaration                    go to state 158
+    ConcreteTypeDeclaration            go to state 159
+    ComplexTypeReference               go to state 160
+    SimpleValue                        go to state 326
+    DefinedValue                       go to state 327
+    RestrictedCharacterStringValue     go to state 219
+    BasicTypeId                        go to state 161
+    BasicTypeId_UniverationCompatible  go to state 137
+    BuiltinType                        go to state 162
+    BasicString                        go to state 138
+    BitStringValue                     go to state 220
+    SignedNumber                       go to state 221
+    RealValue                          go to state 222
+    TypeRefName                        go to state 223
+    Identifier                         go to state 224
+    IdentifierAsReference              go to state 225
+    IdentifierAsValue                  go to state 226
+
+
+State 204
+
+  262 BitStringValue: TOK_bstring •
+
+    $default  reduce using rule 262 (BitStringValue)
+
+
+State 205
+
+  171 RestrictedCharacterStringValue: TOK_cstring •
+
+    $default  reduce using rule 171 (RestrictedCharacterStringValue)
+
+
+State 206
+
+  263 BitStringValue: TOK_hstring •
+
+    $default  reduce using rule 263 (BitStringValue)
+
+
+State 207
+
+  324 SignedNumber: "number" •
+
+    $default  reduce using rule 324 (SignedNumber)
+
+
+State 208
+
+  325 SignedNumber: "negative number" •
+
+    $default  reduce using rule 325 (SignedNumber)
+
+
+State 209
+
+  326 RealValue: TOK_realnumber •
+
+    $default  reduce using rule 326 (RealValue)
+
+
+State 210
+
+  172 RestrictedCharacterStringValue: TOK_tuple •
+
+    $default  reduce using rule 172 (RestrictedCharacterStringValue)
+
+
+State 211
+
+  173 RestrictedCharacterStringValue: TOK_quadruple •
+
+    $default  reduce using rule 173 (RestrictedCharacterStringValue)
+
+
+State 212
+
+  163 SimpleValue: TOK_FALSE •
+
+    $default  reduce using rule 163 (SimpleValue)
+
+
+State 213
+
+  162 SimpleValue: TOK_NULL •
+
+    $default  reduce using rule 162 (SimpleValue)
+
+
+State 214
+
+  164 SimpleValue: TOK_TRUE •
+
+    $default  reduce using rule 164 (SimpleValue)
+
+
+State 215
+
+  161 Value: '{' • $@5 Opaque
+
+    $default  reduce using rule 160 ($@5)
+
+    $@5  go to state 328
+
+
+State 216
+
+  157 ValueAssignment: Identifier Type TOK_PPEQ Value •
+
+    $default  reduce using rule 157 (ValueAssignment)
+
+
+State 217
+
+  158 Value: SimpleValue •
+
+    $default  reduce using rule 158 (Value)
+
+
+State 218
+
+  159 Value: DefinedValue •
+
+    $default  reduce using rule 159 (Value)
+
+
+State 219
+
+  167 SimpleValue: RestrictedCharacterStringValue •
+
+    $default  reduce using rule 167 (SimpleValue)
+
+
+State 220
+
+  168 SimpleValue: BitStringValue •
+
+    $default  reduce using rule 168 (SimpleValue)
+
+
+State 221
+
+  165 SimpleValue: SignedNumber •
+
+    $default  reduce using rule 165 (SimpleValue)
+
+
+State 222
+
+  166 SimpleValue: RealValue •
+
+    $default  reduce using rule 166 (SimpleValue)
+
+
+State 223
+
+  170 DefinedValue: TypeRefName • '.' Identifier
+
+    '.'  shift, and go to state 329
+
+
+State 224
+
+  343 IdentifierAsReference: Identifier •
+
+    $default  reduce using rule 343 (IdentifierAsReference)
+
+
+State 225
+
+  344 IdentifierAsValue: IdentifierAsReference •
+
+    $default  reduce using rule 344 (IdentifierAsValue)
+
+
+State 226
+
+  169 DefinedValue: IdentifierAsValue •
+
+    $default  reduce using rule 169 (DefinedValue)
+
+
+State 227
+
+  105 ClassField: TOK_typefieldreference • optMarker
+  109           | TOK_typefieldreference • FieldName optMarker
+  110           | TOK_typefieldreference • Type optMarker
+  111           | TOK_typefieldreference • DefinedObjectClass optMarker
+
+    TOK_capitalreference    shift, and go to state 330
+    TOK_typefieldreference  shift, and go to state 331
+    TOK_DEFAULT             shift, and go to state 332
+    TOK_OPTIONAL            shift, and go to state 333
+    '['                     shift, and go to state 105
+
+    TOK_capitalreference  [reduce using rule 327 (optTag)]
+    '}'                   reduce using rule 301 (optMarker)
+    ','                   reduce using rule 301 (optMarker)
+    $default              reduce using rule 327 (optTag)
+
+    Type                go to state 334
+    TaggedType          go to state 107
+    FieldName           go to state 335
+    DefinedObjectClass  go to state 336
+    optMarker           go to state 337
+    Marker              go to state 338
+    optTag              go to state 108
+    Tag                 go to state 109
+    TagTypeValue        go to state 110
+
+
+State 228
+
+  106 ClassField: TOK_valuefieldreference • Type optUNIQUE optMarker
+  107           | TOK_valuefieldreference • FieldName optMarker
+  108           | TOK_valuefieldreference • DefinedObjectClass optMarker
+
+    TOK_capitalreference    shift, and go to state 330
+    TOK_typefieldreference  shift, and go to state 331
+    '['                     shift, and go to state 105
+
+    TOK_capitalreference  [reduce using rule 327 (optTag)]
+    $default              reduce using rule 327 (optTag)
+
+    Type                go to state 339
+    TaggedType          go to state 107
+    FieldName           go to state 340
+    DefinedObjectClass  go to state 341
+    optTag              go to state 108
+    Tag                 go to state 109
+    TagTypeValue        go to state 110
+
+
+State 229
+
+  100 ObjectClass: TOK_CLASS '{' FieldSpec • '}' optWithSyntax
+  104 FieldSpec: FieldSpec • ',' ClassField
+
+    '}'  shift, and go to state 342
+    ','  shift, and go to state 343
+
+
+State 230
+
+  103 FieldSpec: ClassField •
+
+    $default  reduce using rule 103 (FieldSpec)
+
+
+State 231
+
+   33 Assignment: TypeRefName TOK_capitalreference TOK_PPEQ '{' $@2 • Opaque
+
+    TOK_opaque    shift, and go to state 344
+    "identifier"  shift, and go to state 15
+
+    Opaque            go to state 345
+    OpaqueFirstToken  go to state 346
+    Identifier        go to state 347
+
+
+State 232
+
+   70 DataTypeReference: TypeRefName '{' ParameterArgumentList '}' TOK_PPEQ • Type
+   71                  | TypeRefName '{' ParameterArgumentList '}' TOK_PPEQ • ObjectClass
+
+    TOK_CLASS  shift, and go to state 116
+    '['        shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    ObjectClass   go to state 348
+    Type          go to state 349
+    TaggedType    go to state 107
+    optTag        go to state 108
+    Tag           go to state 109
+    TagTypeValue  go to state 110
+
+
+State 233
+
+   73 ParameterArgumentList: ParameterArgumentList ',' ParameterArgumentName •
+
+    $default  reduce using rule 73 (ParameterArgumentList)
+
+
+State 234
+
+   78 ParameterArgumentName: BasicTypeId ':' TypeRefName •
+
+    $default  reduce using rule 78 (ParameterArgumentName)
+
+
+State 235
+
+   77 ParameterArgumentName: BasicTypeId ':' Identifier •
+
+    $default  reduce using rule 77 (ParameterArgumentName)
+
+
+State 236
+
+   76 ParameterArgumentName: TypeRefName ':' TypeRefName •
+
+    $default  reduce using rule 76 (ParameterArgumentName)
+
+
+State 237
+
+   75 ParameterArgumentName: TypeRefName ':' Identifier •
+
+    $default  reduce using rule 75 (ParameterArgumentName)
+
+
+State 238
+
+  330 TagTypeValue: '[' TagClass "number" ']' •
+
+    $default  reduce using rule 330 (TagTypeValue)
+
+
+State 239
+
+  143 ComplexTypeReference: TOK_typereference •
+  145                     | TOK_typereference • '.' TypeRefName
+  338 TypeRefName: TOK_typereference •
+
+    '.'  shift, and go to state 183
+
+    '.'       [reduce using rule 338 (TypeRefName)]
+    $default  reduce using rule 143 (ComplexTypeReference)
+
+
+State 240
+
+  144 ComplexTypeReference: TOK_capitalreference •
+  146                     | TOK_capitalreference • '.' TypeRefName
+  147                     | TOK_capitalreference • '.' ComplexTypeReferenceAmpList
+  339 TypeRefName: TOK_capitalreference •
+
+    '.'  shift, and go to state 184
+
+    '.'       [reduce using rule 339 (TypeRefName)]
+    $default  reduce using rule 144 (ComplexTypeReference)
+
+
+State 241
+
+  236 ElementSetSpec: TOK_ALL • TOK_EXCEPT Elements
+
+    TOK_EXCEPT  shift, and go to state 350
+
+
+State 242
+
+  252 PermittedAlphabet: TOK_FROM • Constraint
+
+    '('  shift, and go to state 194
+
+    Constraint  go to state 351
+
+
+State 243
+
+  264 ContainedSubtype: TOK_INCLUDES • Type
+
+    '['  shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    Type          go to state 352
+    TaggedType    go to state 107
+    optTag        go to state 108
+    Tag           go to state 109
+    TagTypeValue  go to state 110
+
+
+State 244
+
+  258 LowerEndValue: TOK_MIN •
+
+    $default  reduce using rule 258 (LowerEndValue)
+
+
+State 245
+
+  254 PatternConstraint: TOK_PATTERN • TOK_cstring
+  255                  | TOK_PATTERN • Identifier
+
+    TOK_cstring   shift, and go to state 353
+    "identifier"  shift, and go to state 15
+
+    Identifier  go to state 354
+
+
+State 246
+
+  266 InnerTypeConstraints: TOK_WITH • TOK_COMPONENT SingleTypeConstraint
+  267                     | TOK_WITH • TOK_COMPONENTS MultipleTypeConstraints
+
+    TOK_COMPONENT   shift, and go to state 355
+    TOK_COMPONENTS  shift, and go to state 356
+
+
+State 247
+
+  231 ElementSetSpecs: "..." •
+
+    $default  reduce using rule 231 (ElementSetSpecs)
+
+
+State 248
+
+  244 Elements: '(' • ElementSetSpec ')'
+
+    TOK_bstring           shift, and go to state 204
+    TOK_cstring           shift, and go to state 205
+    TOK_hstring           shift, and go to state 206
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_realnumber        shift, and go to state 209
+    TOK_tuple             shift, and go to state 210
+    TOK_quadruple         shift, and go to state 211
+    TOK_typereference     shift, and go to state 239
+    TOK_capitalreference  shift, and go to state 240
+    TOK_ALL               shift, and go to state 241
+    TOK_FALSE             shift, and go to state 212
+    TOK_FROM              shift, and go to state 242
+    TOK_INCLUDES          shift, and go to state 243
+    TOK_MIN               shift, and go to state 244
+    TOK_NULL              shift, and go to state 213
+    TOK_PATTERN           shift, and go to state 245
+    TOK_SIZE              shift, and go to state 192
+    TOK_TRUE              shift, and go to state 214
+    TOK_WITH              shift, and go to state 246
+    '{'                   shift, and go to state 215
+    '('                   shift, and go to state 248
+
+    DefinedType                     go to state 249
+    DefinedUntaggedType             go to state 250
+    ComplexTypeReference            go to state 160
+    Value                           go to state 251
+    SimpleValue                     go to state 217
+    DefinedValue                    go to state 218
+    RestrictedCharacterStringValue  go to state 219
+    ElementSetSpec                  go to state 357
+    Unions                          go to state 254
+    Intersections                   go to state 255
+    IntersectionElements            go to state 256
+    Elements                        go to state 257
+    SubtypeElements                 go to state 258
+    PermittedAlphabet               go to state 259
+    SizeConstraint                  go to state 260
+    PatternConstraint               go to state 261
+    ValueRange                      go to state 262
+    LowerEndValue                   go to state 263
+    SingleValue                     go to state 264
+    BitStringValue                  go to state 220
+    ContainedSubtype                go to state 265
+    InnerTypeConstraints            go to state 266
+    SignedNumber                    go to state 221
+    RealValue                       go to state 222
+    TypeRefName                     go to state 223
+    Identifier                      go to state 224
+    IdentifierAsReference           go to state 225
+    IdentifierAsValue               go to state 226
+
+
+State 249
+
+  127 DefinedUntaggedType: DefinedType • optManyConstraints
+
+    '('  shift, and go to state 194
+
+    $default  reduce using rule 220 (optManyConstraints)
+
+    optManyConstraints  go to state 358
+    Constraint          go to state 201
+    ManyConstraints     go to state 202
+
+
+State 250
+
+  265 ContainedSubtype: DefinedUntaggedType •
+
+    $default  reduce using rule 265 (ContainedSubtype)
+
+
+State 251
+
+  261 SingleValue: Value •
+
+    $default  reduce using rule 261 (SingleValue)
+
+
+State 252
+
+   64 ValueSet: '{' ElementSetSpecs • '}'
+
+    '}'  shift, and go to state 359
+
+
+State 253
+
+  232 ElementSetSpecs: ElementSetSpec •
+  233                | ElementSetSpec • ',' "..."
+  234                | ElementSetSpec • ',' "..." ',' ElementSetSpec
+
+    ','  shift, and go to state 360
+
+    $default  reduce using rule 232 (ElementSetSpecs)
+
+
+State 254
+
+  235 ElementSetSpec: Unions •
+  238 Unions: Unions • UnionMark Intersections
+
+    '|'        shift, and go to state 361
+    TOK_UNION  shift, and go to state 362
+
+    $default  reduce using rule 235 (ElementSetSpec)
+
+    UnionMark  go to state 363
+
+
+State 255
+
+  237 Unions: Intersections •
+  240 Intersections: Intersections • IntersectionMark IntersectionElements
+
+    '^'               shift, and go to state 364
+    TOK_INTERSECTION  shift, and go to state 365
+
+    $default  reduce using rule 237 (Unions)
+
+    IntersectionMark  go to state 366
+
+
+State 256
+
+  239 Intersections: IntersectionElements •
+
+    $default  reduce using rule 239 (Intersections)
+
+
+State 257
+
+  241 IntersectionElements: Elements •
+  242                     | Elements • TOK_EXCEPT Elements
+
+    TOK_EXCEPT  shift, and go to state 367
+
+    $default  reduce using rule 241 (IntersectionElements)
+
+
+State 258
+
+  243 Elements: SubtypeElements •
+
+    $default  reduce using rule 243 (Elements)
+
+
+State 259
+
+  247 SubtypeElements: PermittedAlphabet •
+
+    $default  reduce using rule 247 (SubtypeElements)
+
+
+State 260
+
+  248 SubtypeElements: SizeConstraint •
+
+    $default  reduce using rule 248 (SubtypeElements)
+
+
+State 261
+
+  250 SubtypeElements: PatternConstraint •
+
+    $default  reduce using rule 250 (SubtypeElements)
+
+
+State 262
+
+  251 SubtypeElements: ValueRange •
+
+    $default  reduce using rule 251 (SubtypeElements)
+
+
+State 263
+
+  256 ValueRange: LowerEndValue • ConstraintRangeSpec UpperEndValue
+
+    ".."  shift, and go to state 368
+    '<'   shift, and go to state 369
+
+    ConstraintRangeSpec  go to state 370
+
+
+State 264
+
+  245 SubtypeElements: SingleValue •
+  257 LowerEndValue: SingleValue •
+
+    ".."      reduce using rule 257 (LowerEndValue)
+    '<'       reduce using rule 257 (LowerEndValue)
+    $default  reduce using rule 245 (SubtypeElements)
+
+
+State 265
+
+  246 SubtypeElements: ContainedSubtype •
+
+    $default  reduce using rule 246 (SubtypeElements)
+
+
+State 266
+
+  249 SubtypeElements: InnerTypeConstraints •
+
+    $default  reduce using rule 249 (SubtypeElements)
+
+
+State 267
+
+  145 ComplexTypeReference: TOK_typereference '.' TypeRefName •
+
+    $default  reduce using rule 145 (ComplexTypeReference)
+
+
+State 268
+
+  151 PrimitiveFieldReference: TOK_typefieldreference •
+
+    $default  reduce using rule 151 (PrimitiveFieldReference)
+
+
+State 269
+
+  152 PrimitiveFieldReference: TOK_valuefieldreference •
+
+    $default  reduce using rule 152 (PrimitiveFieldReference)
+
+
+State 270
+
+  147 ComplexTypeReference: TOK_capitalreference '.' ComplexTypeReferenceAmpList •
+  149 ComplexTypeReferenceAmpList: ComplexTypeReferenceAmpList • '.' ComplexTypeReferenceElement
+
+    '.'  shift, and go to state 371
+
+    $default  reduce using rule 147 (ComplexTypeReference)
+
+
+State 271
+
+  148 ComplexTypeReferenceAmpList: ComplexTypeReferenceElement •
+
+    $default  reduce using rule 148 (ComplexTypeReferenceAmpList)
+
+
+State 272
+
+  150 ComplexTypeReferenceElement: PrimitiveFieldReference •
+
+    $default  reduce using rule 150 (ComplexTypeReferenceElement)
+
+
+State 273
+
+  146 ComplexTypeReference: TOK_capitalreference '.' TypeRefName •
+
+    $default  reduce using rule 146 (ComplexTypeReference)
+
+
+State 274
+
+  199 BuiltinType: TOK_ExtValue_BIT_STRING '{' '}' •
+
+    $default  reduce using rule 199 (BuiltinType)
+
+
+State 275
+
+  198 BuiltinType: TOK_ExtValue_BIT_STRING '{' IdentifierList • '}'
+  306 IdentifierList: IdentifierList • ',' IdentifierElement
+
+    '}'  shift, and go to state 372
+    ','  shift, and go to state 373
+
+
+State 276
+
+  305 IdentifierList: IdentifierElement •
+
+    $default  reduce using rule 305 (IdentifierList)
+
+
+State 277
+
+  307 IdentifierElement: Identifier •
+
+    $default  reduce using rule 307 (IdentifierElement)
+
+
+State 278
+
+  141 ConcreteTypeDeclaration: TOK_ANY TOK_DEFINED TOK_BY • Identifier
+
+    "identifier"  shift, and go to state 15
+
+    Identifier  go to state 374
+
+
+State 279
+
+  197 BuiltinType: TOK_BIT TOK_STRING '{' • NamedBitList '}'
+
+    "identifier"  shift, and go to state 15
+
+    NamedBitList  go to state 375
+    NamedBit      go to state 376
+    Identifier    go to state 377
+
+
+State 280
+
+  122 ExtensionAndException: "..." •
+  123                      | "..." • '!' DefinedValue
+  124                      | "..." • '!' SignedNumber
+
+    '!'  shift, and go to state 378
+
+    $default  reduce using rule 122 (ExtensionAndException)
+
+
+State 281
+
+   95 AlternativeTypeLists: AlternativeTypeLists • ',' AlternativeType
+   96                     | AlternativeTypeLists • ',' TOK_VBracketLeft AlternativeTypeLists TOK_VBracketRight
+  135 ConcreteTypeDeclaration: TOK_CHOICE '{' AlternativeTypeLists • '}'
+
+    '}'  shift, and go to state 379
+    ','  shift, and go to state 380
+
+
+State 282
+
+   94 AlternativeTypeLists: AlternativeType •
+
+    $default  reduce using rule 94 (AlternativeTypeLists)
+
+
+State 283
+
+   98 AlternativeType: ExtensionAndException •
+
+    $default  reduce using rule 98 (AlternativeType)
+
+
+State 284
+
+   99 AlternativeType: MaybeIndirectTaggedType •
+
+    $default  reduce using rule 99 (AlternativeType)
+
+
+State 285
+
+  129 MaybeIndirectTaggedType: optTag • MaybeIndirectTypeDeclaration optManyConstraints
+
+    $default  reduce using rule 130 (NSTD_IndirectMarker)
+
+    NSTD_IndirectMarker           go to state 381
+    MaybeIndirectTypeDeclaration  go to state 382
+
+
+State 286
+
+   97 AlternativeType: Identifier • MaybeIndirectTaggedType
+
+    '['  shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    MaybeIndirectTaggedType  go to state 383
+    optTag                   go to state 285
+    Tag                      go to state 109
+    TagTypeValue             go to state 110
+
+
+State 287
+
+  323 UniverationElement: "..." •
+
+    $default  reduce using rule 323 (UniverationElement)
+
+
+State 288
+
+  196 BuiltinType: TOK_ENUMERATED '{' Enumerations • '}'
+
+    '}'  shift, and go to state 384
+
+
+State 289
+
+  316 Enumerations: UniverationList •
+  318 UniverationList: UniverationList • ',' UniverationElement
+
+    ','  shift, and go to state 385
+
+    $default  reduce using rule 316 (Enumerations)
+
+
+State 290
+
+  317 UniverationList: UniverationElement •
+
+    $default  reduce using rule 317 (UniverationList)
+
+
+State 291
+
+  322 UniverationElement: SignedNumber •
+
+    $default  reduce using rule 322 (UniverationElement)
+
+
+State 292
+
+  319 UniverationElement: Identifier •
+  320                   | Identifier • '(' SignedNumber ')'
+  321                   | Identifier • '(' DefinedValue ')'
+
+    '('  shift, and go to state 386
+
+    $default  reduce using rule 319 (UniverationElement)
+
+
+State 293
+
+  142 ConcreteTypeDeclaration: TOK_INSTANCE TOK_OF ComplexTypeReference •
+
+    $default  reduce using rule 142 (ConcreteTypeDeclaration)
+
+
+State 294
+
+  195 BuiltinType: TOK_INTEGER '{' NamedNumberList • '}'
+  309 NamedNumberList: NamedNumberList • ',' NamedNumber
+
+    '}'  shift, and go to state 387
+    ','  shift, and go to state 388
+
+
+State 295
+
+  308 NamedNumberList: NamedNumber •
+
+    $default  reduce using rule 308 (NamedNumberList)
+
+
+State 296
+
+  310 NamedNumber: Identifier • '(' SignedNumber ')'
+  311            | Identifier • '(' DefinedValue ')'
+
+    '('  shift, and go to state 389
+
+
+State 297
+
+  253 SizeConstraint: TOK_SIZE Constraint •
+
+    $default  reduce using rule 253 (SizeConstraint)
+
+
+State 298
+
+   92 ComponentType: TOK_COMPONENTS • TOK_OF MaybeIndirectTaggedType
+
+    TOK_OF  shift, and go to state 390
+
+
+State 299
+
+  136 ConcreteTypeDeclaration: TOK_SEQUENCE '{' optComponentTypeLists • '}'
+
+    '}'  shift, and go to state 391
+
+
+State 300
+
+   86 optComponentTypeLists: ComponentTypeLists •
+   88 ComponentTypeLists: ComponentTypeLists • ',' ComponentType
+   89                   | ComponentTypeLists • ',' TOK_VBracketLeft ComponentTypeLists TOK_VBracketRight
+
+    ','  shift, and go to state 392
+
+    $default  reduce using rule 86 (optComponentTypeLists)
+
+
+State 301
+
+   87 ComponentTypeLists: ComponentType •
+
+    $default  reduce using rule 87 (ComponentTypeLists)
+
+
+State 302
+
+   93 ComponentType: ExtensionAndException •
+
+    $default  reduce using rule 93 (ComponentType)
+
+
+State 303
+
+   91 ComponentType: MaybeIndirectTaggedType • optMarker
+
+    TOK_DEFAULT   shift, and go to state 332
+    TOK_OPTIONAL  shift, and go to state 333
+
+    $default  reduce using rule 301 (optMarker)
+
+    optMarker  go to state 393
+    Marker     go to state 338
+
+
+State 304
+
+   90 ComponentType: Identifier • MaybeIndirectTaggedType optMarker
+
+    '['  shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    MaybeIndirectTaggedType  go to state 394
+    optTag                   go to state 285
+    Tag                      go to state 109
+    TagTypeValue             go to state 110
+
+
+State 305
+
+  285 UserDefinedConstraint: TOK_CONSTRAINED • TOK_BY '{' $@6 Opaque
+
+    TOK_BY  shift, and go to state 395
+
+
+State 306
+
+  286 ContentsConstraint: TOK_CONTAINING • Type
+
+    '['  shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    Type          go to state 396
+    TaggedType    go to state 107
+    optTag        go to state 108
+    Tag           go to state 109
+    TagTypeValue  go to state 110
+
+
+State 307
+
+  161 Value: '{' • $@5 Opaque
+  293 SimpleTableConstraint: '{' • TypeRefName '}'
+
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    $default  reduce using rule 160 ($@5)
+
+    $@5          go to state 328
+    TypeRefName  go to state 397
+
+
+State 308
+
+  225 Constraint: '(' ConstraintSpec • ')'
+
+    ')'  shift, and go to state 398
+
+
+State 309
+
+  228 ConstraintSpec: SubtypeConstraint •
+
+    $default  reduce using rule 228 (ConstraintSpec)
+
+
+State 310
+
+  230 SubtypeConstraint: ElementSetSpecs •
+
+    $default  reduce using rule 230 (SubtypeConstraint)
+
+
+State 311
+
+  229 ConstraintSpec: GeneralConstraint •
+
+    $default  reduce using rule 229 (ConstraintSpec)
+
+
+State 312
+
+  281 GeneralConstraint: UserDefinedConstraint •
+
+    $default  reduce using rule 281 (GeneralConstraint)
+
+
+State 313
+
+  283 GeneralConstraint: ContentsConstraint •
+
+    $default  reduce using rule 283 (GeneralConstraint)
+
+
+State 314
+
+  282 GeneralConstraint: TableConstraint •
+
+    $default  reduce using rule 282 (GeneralConstraint)
+
+
+State 315
+
+  291 TableConstraint: SimpleTableConstraint •
+  294 ComponentRelationConstraint: SimpleTableConstraint • '{' AtNotationList '}'
+
+    '{'  shift, and go to state 399
+
+    $default  reduce using rule 291 (TableConstraint)
+
+
+State 316
+
+  292 TableConstraint: ComponentRelationConstraint •
+
+    $default  reduce using rule 292 (TableConstraint)
+
+
+State 317
+
+  138 ConcreteTypeDeclaration: TOK_SEQUENCE optSizeOrConstraint TOK_OF • optIdentifier optTag MaybeIndirectTypeDeclaration
+
+    "identifier"  shift, and go to state 15
+
+    $default  reduce using rule 340 (optIdentifier)
+
+    optIdentifier  go to state 400
+    Identifier     go to state 401
+
+
+State 318
+
+  137 ConcreteTypeDeclaration: TOK_SET '{' optComponentTypeLists • '}'
+
+    '}'  shift, and go to state 402
+
+
+State 319
+
+  139 ConcreteTypeDeclaration: TOK_SET optSizeOrConstraint TOK_OF • optIdentifier optTag MaybeIndirectTypeDeclaration
+
+    "identifier"  shift, and go to state 15
+
+    $default  reduce using rule 340 (optIdentifier)
+
+    optIdentifier  go to state 403
+    Identifier     go to state 401
+
+
+State 320
+
+  227 ManyConstraints: ManyConstraints Constraint •
+
+    $default  reduce using rule 227 (ManyConstraints)
+
+
+State 321
+
+  162 SimpleValue: TOK_NULL •
+  179 BasicTypeId: TOK_NULL •
+
+    '}'       reduce using rule 162 (SimpleValue)
+    '}'       [reduce using rule 179 (BasicTypeId)]
+    '('       reduce using rule 179 (BasicTypeId)
+    ','       reduce using rule 162 (SimpleValue)
+    ','       [reduce using rule 179 (BasicTypeId)]
+    $default  reduce using rule 162 (SimpleValue)
+
+
+State 322
+
+   84 ActualParameter: ValueSet •
+
+    $default  reduce using rule 84 (ActualParameter)
+
+
+State 323
+
+   67 DefinedType: ComplexTypeReference '{' ActualParameterList • '}'
+   80 ActualParameterList: ActualParameterList • ',' ActualParameter
+
+    '}'  shift, and go to state 404
+    ','  shift, and go to state 405
+
+
+State 324
+
+   79 ActualParameterList: ActualParameter •
+
+    $default  reduce using rule 79 (ActualParameterList)
+
+
+State 325
+
+   81 ActualParameter: UntaggedType •
+
+    $default  reduce using rule 81 (ActualParameter)
+
+
+State 326
+
+   82 ActualParameter: SimpleValue •
+
+    $default  reduce using rule 82 (ActualParameter)
+
+
+State 327
+
+   83 ActualParameter: DefinedValue •
+
+    $default  reduce using rule 83 (ActualParameter)
+
+
+State 328
+
+  161 Value: '{' $@5 • Opaque
+
+    TOK_opaque    shift, and go to state 344
+    "identifier"  shift, and go to state 15
+
+    Opaque            go to state 406
+    OpaqueFirstToken  go to state 346
+    Identifier        go to state 347
+
+
+State 329
+
+  170 DefinedValue: TypeRefName '.' • Identifier
+
+    "identifier"  shift, and go to state 15
+
+    Identifier  go to state 407
+
+
+State 330
+
+  156 DefinedObjectClass: TOK_capitalreference •
+
+    $default  reduce using rule 156 (DefinedObjectClass)
+
+
+State 331
+
+  153 FieldName: TOK_typefieldreference •
+
+    $default  reduce using rule 153 (FieldName)
+
+
+State 332
+
+  304 Marker: TOK_DEFAULT • Value
+
+    TOK_bstring           shift, and go to state 204
+    TOK_cstring           shift, and go to state 205
+    TOK_hstring           shift, and go to state 206
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_realnumber        shift, and go to state 209
+    TOK_tuple             shift, and go to state 210
+    TOK_quadruple         shift, and go to state 211
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+    TOK_FALSE             shift, and go to state 212
+    TOK_NULL              shift, and go to state 213
+    TOK_TRUE              shift, and go to state 214
+    '{'                   shift, and go to state 215
+
+    Value                           go to state 408
+    SimpleValue                     go to state 217
+    DefinedValue                    go to state 218
+    RestrictedCharacterStringValue  go to state 219
+    BitStringValue                  go to state 220
+    SignedNumber                    go to state 221
+    RealValue                       go to state 222
+    TypeRefName                     go to state 223
+    Identifier                      go to state 224
+    IdentifierAsReference           go to state 225
+    IdentifierAsValue               go to state 226
+
+
+State 333
+
+  303 Marker: TOK_OPTIONAL •
+
+    $default  reduce using rule 303 (Marker)
+
+
+State 334
+
+  110 ClassField: TOK_typefieldreference Type • optMarker
+
+    TOK_DEFAULT   shift, and go to state 332
+    TOK_OPTIONAL  shift, and go to state 333
+
+    $default  reduce using rule 301 (optMarker)
+
+    optMarker  go to state 409
+    Marker     go to state 338
+
+
+State 335
+
+  109 ClassField: TOK_typefieldreference FieldName • optMarker
+  154 FieldName: FieldName • '.' TOK_typefieldreference
+  155          | FieldName • '.' TOK_valuefieldreference
+
+    TOK_DEFAULT   shift, and go to state 332
+    TOK_OPTIONAL  shift, and go to state 333
+    '.'           shift, and go to state 410
+
+    $default  reduce using rule 301 (optMarker)
+
+    optMarker  go to state 411
+    Marker     go to state 338
+
+
+State 336
+
+  111 ClassField: TOK_typefieldreference DefinedObjectClass • optMarker
+
+    TOK_DEFAULT   shift, and go to state 332
+    TOK_OPTIONAL  shift, and go to state 333
+
+    $default  reduce using rule 301 (optMarker)
+
+    optMarker  go to state 412
+    Marker     go to state 338
+
+
+State 337
+
+  105 ClassField: TOK_typefieldreference optMarker •
+
+    $default  reduce using rule 105 (ClassField)
+
+
+State 338
+
+  302 optMarker: Marker •
+
+    $default  reduce using rule 302 (optMarker)
+
+
+State 339
+
+  106 ClassField: TOK_valuefieldreference Type • optUNIQUE optMarker
+
+    TOK_UNIQUE  shift, and go to state 413
+
+    $default  reduce using rule 101 (optUNIQUE)
+
+    optUNIQUE  go to state 414
+
+
+State 340
+
+  107 ClassField: TOK_valuefieldreference FieldName • optMarker
+  154 FieldName: FieldName • '.' TOK_typefieldreference
+  155          | FieldName • '.' TOK_valuefieldreference
+
+    TOK_DEFAULT   shift, and go to state 332
+    TOK_OPTIONAL  shift, and go to state 333
+    '.'           shift, and go to state 410
+
+    $default  reduce using rule 301 (optMarker)
+
+    optMarker  go to state 415
+    Marker     go to state 338
+
+
+State 341
+
+  108 ClassField: TOK_valuefieldreference DefinedObjectClass • optMarker
+
+    TOK_DEFAULT   shift, and go to state 332
+    TOK_OPTIONAL  shift, and go to state 333
+
+    $default  reduce using rule 301 (optMarker)
+
+    optMarker  go to state 416
+    Marker     go to state 338
+
+
+State 342
+
+  100 ObjectClass: TOK_CLASS '{' FieldSpec '}' • optWithSyntax
+
+    TOK_WITH  shift, and go to state 417
+
+    $default  reduce using rule 112 (optWithSyntax)
+
+    optWithSyntax  go to state 418
+    WithSyntax     go to state 419
+
+
+State 343
+
+  104 FieldSpec: FieldSpec ',' • ClassField
+
+    TOK_typefieldreference   shift, and go to state 227
+    TOK_valuefieldreference  shift, and go to state 228
+
+    ClassField  go to state 420
+
+
+State 344
+
+  176 OpaqueFirstToken: TOK_opaque •
+
+    $default  reduce using rule 176 (OpaqueFirstToken)
+
+
+State 345
+
+   33 Assignment: TypeRefName TOK_capitalreference TOK_PPEQ '{' $@2 Opaque •
+  175 Opaque: Opaque • TOK_opaque
+
+    TOK_opaque  shift, and go to state 421
+
+    $default  reduce using rule 33 (Assignment)
+
+
+State 346
+
+  174 Opaque: OpaqueFirstToken •
+
+    $default  reduce using rule 174 (Opaque)
+
+
+State 347
+
+  177 OpaqueFirstToken: Identifier •
+
+    $default  reduce using rule 177 (OpaqueFirstToken)
+
+
+State 348
+
+   71 DataTypeReference: TypeRefName '{' ParameterArgumentList '}' TOK_PPEQ ObjectClass •
+
+    $default  reduce using rule 71 (DataTypeReference)
+
+
+State 349
+
+   70 DataTypeReference: TypeRefName '{' ParameterArgumentList '}' TOK_PPEQ Type •
+
+    $default  reduce using rule 70 (DataTypeReference)
+
+
+State 350
+
+  236 ElementSetSpec: TOK_ALL TOK_EXCEPT • Elements
+
+    TOK_bstring           shift, and go to state 204
+    TOK_cstring           shift, and go to state 205
+    TOK_hstring           shift, and go to state 206
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_realnumber        shift, and go to state 209
+    TOK_tuple             shift, and go to state 210
+    TOK_quadruple         shift, and go to state 211
+    TOK_typereference     shift, and go to state 239
+    TOK_capitalreference  shift, and go to state 240
+    TOK_FALSE             shift, and go to state 212
+    TOK_FROM              shift, and go to state 242
+    TOK_INCLUDES          shift, and go to state 243
+    TOK_MIN               shift, and go to state 244
+    TOK_NULL              shift, and go to state 213
+    TOK_PATTERN           shift, and go to state 245
+    TOK_SIZE              shift, and go to state 192
+    TOK_TRUE              shift, and go to state 214
+    TOK_WITH              shift, and go to state 246
+    '{'                   shift, and go to state 215
+    '('                   shift, and go to state 248
+
+    DefinedType                     go to state 249
+    DefinedUntaggedType             go to state 250
+    ComplexTypeReference            go to state 160
+    Value                           go to state 251
+    SimpleValue                     go to state 217
+    DefinedValue                    go to state 218
+    RestrictedCharacterStringValue  go to state 219
+    Elements                        go to state 422
+    SubtypeElements                 go to state 258
+    PermittedAlphabet               go to state 259
+    SizeConstraint                  go to state 260
+    PatternConstraint               go to state 261
+    ValueRange                      go to state 262
+    LowerEndValue                   go to state 263
+    SingleValue                     go to state 264
+    BitStringValue                  go to state 220
+    ContainedSubtype                go to state 265
+    InnerTypeConstraints            go to state 266
+    SignedNumber                    go to state 221
+    RealValue                       go to state 222
+    TypeRefName                     go to state 223
+    Identifier                      go to state 224
+    IdentifierAsReference           go to state 225
+    IdentifierAsValue               go to state 226
+
+
+State 351
+
+  252 PermittedAlphabet: TOK_FROM Constraint •
+
+    $default  reduce using rule 252 (PermittedAlphabet)
+
+
+State 352
+
+  264 ContainedSubtype: TOK_INCLUDES Type •
+
+    $default  reduce using rule 264 (ContainedSubtype)
+
+
+State 353
+
+  254 PatternConstraint: TOK_PATTERN TOK_cstring •
+
+    $default  reduce using rule 254 (PatternConstraint)
+
+
+State 354
+
+  255 PatternConstraint: TOK_PATTERN Identifier •
+
+    $default  reduce using rule 255 (PatternConstraint)
+
+
+State 355
+
+  266 InnerTypeConstraints: TOK_WITH TOK_COMPONENT • SingleTypeConstraint
+
+    '('  shift, and go to state 194
+
+    Constraint            go to state 423
+    SingleTypeConstraint  go to state 424
+
+
+State 356
+
+  267 InnerTypeConstraints: TOK_WITH TOK_COMPONENTS • MultipleTypeConstraints
+
+    '{'  shift, and go to state 425
+
+    MultipleTypeConstraints  go to state 426
+    FullSpecification        go to state 427
+    PartialSpecification     go to state 428
+
+
+State 357
+
+  244 Elements: '(' ElementSetSpec • ')'
+
+    ')'  shift, and go to state 429
+
+
+State 358
+
+  127 DefinedUntaggedType: DefinedType optManyConstraints •
+
+    $default  reduce using rule 127 (DefinedUntaggedType)
+
+
+State 359
+
+   64 ValueSet: '{' ElementSetSpecs '}' •
+
+    $default  reduce using rule 64 (ValueSet)
+
+
+State 360
+
+  233 ElementSetSpecs: ElementSetSpec ',' • "..."
+  234                | ElementSetSpec ',' • "..." ',' ElementSetSpec
+
+    "..."  shift, and go to state 430
+
+
+State 361
+
+  214 UnionMark: '|' •
+
+    $default  reduce using rule 214 (UnionMark)
+
+
+State 362
+
+  215 UnionMark: TOK_UNION •
+
+    $default  reduce using rule 215 (UnionMark)
+
+
+State 363
+
+  238 Unions: Unions UnionMark • Intersections
+
+    TOK_bstring           shift, and go to state 204
+    TOK_cstring           shift, and go to state 205
+    TOK_hstring           shift, and go to state 206
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_realnumber        shift, and go to state 209
+    TOK_tuple             shift, and go to state 210
+    TOK_quadruple         shift, and go to state 211
+    TOK_typereference     shift, and go to state 239
+    TOK_capitalreference  shift, and go to state 240
+    TOK_FALSE             shift, and go to state 212
+    TOK_FROM              shift, and go to state 242
+    TOK_INCLUDES          shift, and go to state 243
+    TOK_MIN               shift, and go to state 244
+    TOK_NULL              shift, and go to state 213
+    TOK_PATTERN           shift, and go to state 245
+    TOK_SIZE              shift, and go to state 192
+    TOK_TRUE              shift, and go to state 214
+    TOK_WITH              shift, and go to state 246
+    '{'                   shift, and go to state 215
+    '('                   shift, and go to state 248
+
+    DefinedType                     go to state 249
+    DefinedUntaggedType             go to state 250
+    ComplexTypeReference            go to state 160
+    Value                           go to state 251
+    SimpleValue                     go to state 217
+    DefinedValue                    go to state 218
+    RestrictedCharacterStringValue  go to state 219
+    Intersections                   go to state 431
+    IntersectionElements            go to state 256
+    Elements                        go to state 257
+    SubtypeElements                 go to state 258
+    PermittedAlphabet               go to state 259
+    SizeConstraint                  go to state 260
+    PatternConstraint               go to state 261
+    ValueRange                      go to state 262
+    LowerEndValue                   go to state 263
+    SingleValue                     go to state 264
+    BitStringValue                  go to state 220
+    ContainedSubtype                go to state 265
+    InnerTypeConstraints            go to state 266
+    SignedNumber                    go to state 221
+    RealValue                       go to state 222
+    TypeRefName                     go to state 223
+    Identifier                      go to state 224
+    IdentifierAsReference           go to state 225
+    IdentifierAsValue               go to state 226
+
+
+State 364
+
+  216 IntersectionMark: '^' •
+
+    $default  reduce using rule 216 (IntersectionMark)
+
+
+State 365
+
+  217 IntersectionMark: TOK_INTERSECTION •
+
+    $default  reduce using rule 217 (IntersectionMark)
+
+
+State 366
+
+  240 Intersections: Intersections IntersectionMark • IntersectionElements
+
+    TOK_bstring           shift, and go to state 204
+    TOK_cstring           shift, and go to state 205
+    TOK_hstring           shift, and go to state 206
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_realnumber        shift, and go to state 209
+    TOK_tuple             shift, and go to state 210
+    TOK_quadruple         shift, and go to state 211
+    TOK_typereference     shift, and go to state 239
+    TOK_capitalreference  shift, and go to state 240
+    TOK_FALSE             shift, and go to state 212
+    TOK_FROM              shift, and go to state 242
+    TOK_INCLUDES          shift, and go to state 243
+    TOK_MIN               shift, and go to state 244
+    TOK_NULL              shift, and go to state 213
+    TOK_PATTERN           shift, and go to state 245
+    TOK_SIZE              shift, and go to state 192
+    TOK_TRUE              shift, and go to state 214
+    TOK_WITH              shift, and go to state 246
+    '{'                   shift, and go to state 215
+    '('                   shift, and go to state 248
+
+    DefinedType                     go to state 249
+    DefinedUntaggedType             go to state 250
+    ComplexTypeReference            go to state 160
+    Value                           go to state 251
+    SimpleValue                     go to state 217
+    DefinedValue                    go to state 218
+    RestrictedCharacterStringValue  go to state 219
+    IntersectionElements            go to state 432
+    Elements                        go to state 257
+    SubtypeElements                 go to state 258
+    PermittedAlphabet               go to state 259
+    SizeConstraint                  go to state 260
+    PatternConstraint               go to state 261
+    ValueRange                      go to state 262
+    LowerEndValue                   go to state 263
+    SingleValue                     go to state 264
+    BitStringValue                  go to state 220
+    ContainedSubtype                go to state 265
+    InnerTypeConstraints            go to state 266
+    SignedNumber                    go to state 221
+    RealValue                       go to state 222
+    TypeRefName                     go to state 223
+    Identifier                      go to state 224
+    IdentifierAsReference           go to state 225
+    IdentifierAsValue               go to state 226
+
+
+State 367
+
+  242 IntersectionElements: Elements TOK_EXCEPT • Elements
+
+    TOK_bstring           shift, and go to state 204
+    TOK_cstring           shift, and go to state 205
+    TOK_hstring           shift, and go to state 206
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_realnumber        shift, and go to state 209
+    TOK_tuple             shift, and go to state 210
+    TOK_quadruple         shift, and go to state 211
+    TOK_typereference     shift, and go to state 239
+    TOK_capitalreference  shift, and go to state 240
+    TOK_FALSE             shift, and go to state 212
+    TOK_FROM              shift, and go to state 242
+    TOK_INCLUDES          shift, and go to state 243
+    TOK_MIN               shift, and go to state 244
+    TOK_NULL              shift, and go to state 213
+    TOK_PATTERN           shift, and go to state 245
+    TOK_SIZE              shift, and go to state 192
+    TOK_TRUE              shift, and go to state 214
+    TOK_WITH              shift, and go to state 246
+    '{'                   shift, and go to state 215
+    '('                   shift, and go to state 248
+
+    DefinedType                     go to state 249
+    DefinedUntaggedType             go to state 250
+    ComplexTypeReference            go to state 160
+    Value                           go to state 251
+    SimpleValue                     go to state 217
+    DefinedValue                    go to state 218
+    RestrictedCharacterStringValue  go to state 219
+    Elements                        go to state 433
+    SubtypeElements                 go to state 258
+    PermittedAlphabet               go to state 259
+    SizeConstraint                  go to state 260
+    PatternConstraint               go to state 261
+    ValueRange                      go to state 262
+    LowerEndValue                   go to state 263
+    SingleValue                     go to state 264
+    BitStringValue                  go to state 220
+    ContainedSubtype                go to state 265
+    InnerTypeConstraints            go to state 266
+    SignedNumber                    go to state 221
+    RealValue                       go to state 222
+    TypeRefName                     go to state 223
+    Identifier                      go to state 224
+    IdentifierAsReference           go to state 225
+    IdentifierAsValue               go to state 226
+
+
+State 368
+
+  287 ConstraintRangeSpec: ".." •
+  288                    | ".." • '<'
+
+    '<'  shift, and go to state 434
+
+    $default  reduce using rule 287 (ConstraintRangeSpec)
+
+
+State 369
+
+  289 ConstraintRangeSpec: '<' • ".."
+  290                    | '<' • ".." '<'
+
+    ".."  shift, and go to state 435
+
+
+State 370
+
+  256 ValueRange: LowerEndValue ConstraintRangeSpec • UpperEndValue
+
+    TOK_bstring           shift, and go to state 204
+    TOK_cstring           shift, and go to state 205
+    TOK_hstring           shift, and go to state 206
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_realnumber        shift, and go to state 209
+    TOK_tuple             shift, and go to state 210
+    TOK_quadruple         shift, and go to state 211
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+    TOK_FALSE             shift, and go to state 212
+    TOK_MAX               shift, and go to state 436
+    TOK_NULL              shift, and go to state 213
+    TOK_TRUE              shift, and go to state 214
+    '{'                   shift, and go to state 215
+
+    Value                           go to state 251
+    SimpleValue                     go to state 217
+    DefinedValue                    go to state 218
+    RestrictedCharacterStringValue  go to state 219
+    UpperEndValue                   go to state 437
+    SingleValue                     go to state 438
+    BitStringValue                  go to state 220
+    SignedNumber                    go to state 221
+    RealValue                       go to state 222
+    TypeRefName                     go to state 223
+    Identifier                      go to state 224
+    IdentifierAsReference           go to state 225
+    IdentifierAsValue               go to state 226
+
+
+State 371
+
+  149 ComplexTypeReferenceAmpList: ComplexTypeReferenceAmpList '.' • ComplexTypeReferenceElement
+
+    TOK_typefieldreference   shift, and go to state 268
+    TOK_valuefieldreference  shift, and go to state 269
+
+    ComplexTypeReferenceElement  go to state 439
+    PrimitiveFieldReference      go to state 272
+
+
+State 372
+
+  198 BuiltinType: TOK_ExtValue_BIT_STRING '{' IdentifierList '}' •
+
+    $default  reduce using rule 198 (BuiltinType)
+
+
+State 373
+
+  306 IdentifierList: IdentifierList ',' • IdentifierElement
+
+    "identifier"  shift, and go to state 15
+
+    IdentifierElement  go to state 440
+    Identifier         go to state 277
+
+
+State 374
+
+  141 ConcreteTypeDeclaration: TOK_ANY TOK_DEFINED TOK_BY Identifier •
+
+    $default  reduce using rule 141 (ConcreteTypeDeclaration)
+
+
+State 375
+
+  197 BuiltinType: TOK_BIT TOK_STRING '{' NamedBitList • '}'
+  313 NamedBitList: NamedBitList • ',' NamedBit
+
+    '}'  shift, and go to state 441
+    ','  shift, and go to state 442
+
+
+State 376
+
+  312 NamedBitList: NamedBit •
+
+    $default  reduce using rule 312 (NamedBitList)
+
+
+State 377
+
+  314 NamedBit: Identifier • '(' "number" ')'
+  315         | Identifier • '(' DefinedValue ')'
+
+    '('  shift, and go to state 443
+
+
+State 378
+
+  123 ExtensionAndException: "..." '!' • DefinedValue
+  124                      | "..." '!' • SignedNumber
+
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    DefinedValue           go to state 444
+    SignedNumber           go to state 445
+    TypeRefName            go to state 223
+    Identifier             go to state 224
+    IdentifierAsReference  go to state 225
+    IdentifierAsValue      go to state 226
+
+
+State 379
+
+  135 ConcreteTypeDeclaration: TOK_CHOICE '{' AlternativeTypeLists '}' •
+
+    $default  reduce using rule 135 (ConcreteTypeDeclaration)
+
+
+State 380
+
+   95 AlternativeTypeLists: AlternativeTypeLists ',' • AlternativeType
+   96                     | AlternativeTypeLists ',' • TOK_VBracketLeft AlternativeTypeLists TOK_VBracketRight
+
+    TOK_VBracketLeft  shift, and go to state 446
+    "identifier"      shift, and go to state 15
+    "..."             shift, and go to state 280
+    '['               shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    AlternativeType          go to state 447
+    ExtensionAndException    go to state 283
+    MaybeIndirectTaggedType  go to state 284
+    optTag                   go to state 285
+    Tag                      go to state 109
+    TagTypeValue             go to state 110
+    Identifier               go to state 286
+
+
+State 381
+
+  131 MaybeIndirectTypeDeclaration: NSTD_IndirectMarker • TypeDeclaration
+
+    TOK_typereference        shift, and go to state 145
+    TOK_capitalreference     shift, and go to state 146
+    TOK_ExtValue_BIT_STRING  shift, and go to state 147
+    TOK_ANY                  shift, and go to state 148
+    TOK_BIT                  shift, and go to state 149
+    TOK_BMPString            shift, and go to state 70
+    TOK_BOOLEAN              shift, and go to state 121
+    TOK_CHARACTER            shift, and go to state 122
+    TOK_CHOICE               shift, and go to state 150
+    TOK_EMBEDDED             shift, and go to state 123
+    TOK_ENUMERATED           shift, and go to state 151
+    TOK_EXTERNAL             shift, and go to state 125
+    TOK_GeneralizedTime      shift, and go to state 126
+    TOK_GeneralString        shift, and go to state 72
+    TOK_GraphicString        shift, and go to state 73
+    TOK_IA5String            shift, and go to state 74
+    TOK_INSTANCE             shift, and go to state 152
+    TOK_INTEGER              shift, and go to state 153
+    TOK_ISO646String         shift, and go to state 75
+    TOK_NULL                 shift, and go to state 128
+    TOK_NumericString        shift, and go to state 76
+    TOK_OBJECT               shift, and go to state 129
+    TOK_ObjectDescriptor     shift, and go to state 77
+    TOK_OCTET                shift, and go to state 130
+    TOK_PrintableString      shift, and go to state 78
+    TOK_REAL                 shift, and go to state 131
+    TOK_RELATIVE_OID         shift, and go to state 132
+    TOK_SEQUENCE             shift, and go to state 154
+    TOK_SET                  shift, and go to state 155
+    TOK_T61String            shift, and go to state 79
+    TOK_TeletexString        shift, and go to state 80
+    TOK_UniversalString      shift, and go to state 81
+    TOK_UTCTime              shift, and go to state 133
+    TOK_UTF8String           shift, and go to state 82
+    TOK_VideotexString       shift, and go to state 83
+    TOK_VisibleString        shift, and go to state 84
+
+    DefinedType                        go to state 156
+    TypeDeclaration                    go to state 448
+    ConcreteTypeDeclaration            go to state 159
+    ComplexTypeReference               go to state 160
+    BasicTypeId                        go to state 161
+    BasicTypeId_UniverationCompatible  go to state 137
+    BuiltinType                        go to state 162
+    BasicString                        go to state 138
+
+
+State 382
+
+  129 MaybeIndirectTaggedType: optTag MaybeIndirectTypeDeclaration • optManyConstraints
+
+    '('  shift, and go to state 194
+
+    $default  reduce using rule 220 (optManyConstraints)
+
+    optManyConstraints  go to state 449
+    Constraint          go to state 201
+    ManyConstraints     go to state 202
+
+
+State 383
+
+   97 AlternativeType: Identifier MaybeIndirectTaggedType •
+
+    $default  reduce using rule 97 (AlternativeType)
+
+
+State 384
+
+  196 BuiltinType: TOK_ENUMERATED '{' Enumerations '}' •
+
+    $default  reduce using rule 196 (BuiltinType)
+
+
+State 385
+
+  318 UniverationList: UniverationList ',' • UniverationElement
+
+    "identifier"       shift, and go to state 15
+    "number"           shift, and go to state 207
+    "negative number"  shift, and go to state 208
+    "..."              shift, and go to state 287
+
+    UniverationElement  go to state 450
+    SignedNumber        go to state 291
+    Identifier          go to state 292
+
+
+State 386
+
+  320 UniverationElement: Identifier '(' • SignedNumber ')'
+  321                   | Identifier '(' • DefinedValue ')'
+
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    DefinedValue           go to state 451
+    SignedNumber           go to state 452
+    TypeRefName            go to state 223
+    Identifier             go to state 224
+    IdentifierAsReference  go to state 225
+    IdentifierAsValue      go to state 226
+
+
+State 387
+
+  195 BuiltinType: TOK_INTEGER '{' NamedNumberList '}' •
+
+    $default  reduce using rule 195 (BuiltinType)
+
+
+State 388
+
+  309 NamedNumberList: NamedNumberList ',' • NamedNumber
+
+    "identifier"  shift, and go to state 15
+
+    NamedNumber  go to state 453
+    Identifier   go to state 296
+
+
+State 389
+
+  310 NamedNumber: Identifier '(' • SignedNumber ')'
+  311            | Identifier '(' • DefinedValue ')'
+
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    DefinedValue           go to state 454
+    SignedNumber           go to state 455
+    TypeRefName            go to state 223
+    Identifier             go to state 224
+    IdentifierAsReference  go to state 225
+    IdentifierAsValue      go to state 226
+
+
+State 390
+
+   92 ComponentType: TOK_COMPONENTS TOK_OF • MaybeIndirectTaggedType
+
+    '['  shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    MaybeIndirectTaggedType  go to state 456
+    optTag                   go to state 285
+    Tag                      go to state 109
+    TagTypeValue             go to state 110
+
+
+State 391
+
+  136 ConcreteTypeDeclaration: TOK_SEQUENCE '{' optComponentTypeLists '}' •
+
+    $default  reduce using rule 136 (ConcreteTypeDeclaration)
+
+
+State 392
+
+   88 ComponentTypeLists: ComponentTypeLists ',' • ComponentType
+   89                   | ComponentTypeLists ',' • TOK_VBracketLeft ComponentTypeLists TOK_VBracketRight
+
+    TOK_VBracketLeft  shift, and go to state 457
+    "identifier"      shift, and go to state 15
+    TOK_COMPONENTS    shift, and go to state 298
+    "..."             shift, and go to state 280
+    '['               shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    ComponentType            go to state 458
+    ExtensionAndException    go to state 302
+    MaybeIndirectTaggedType  go to state 303
+    optTag                   go to state 285
+    Tag                      go to state 109
+    TagTypeValue             go to state 110
+    Identifier               go to state 304
+
+
+State 393
+
+   91 ComponentType: MaybeIndirectTaggedType optMarker •
+
+    $default  reduce using rule 91 (ComponentType)
+
+
+State 394
+
+   90 ComponentType: Identifier MaybeIndirectTaggedType • optMarker
+
+    TOK_DEFAULT   shift, and go to state 332
+    TOK_OPTIONAL  shift, and go to state 333
+
+    $default  reduce using rule 301 (optMarker)
+
+    optMarker  go to state 459
+    Marker     go to state 338
+
+
+State 395
+
+  285 UserDefinedConstraint: TOK_CONSTRAINED TOK_BY • '{' $@6 Opaque
+
+    '{'  shift, and go to state 460
+
+
+State 396
+
+  286 ContentsConstraint: TOK_CONTAINING Type •
+
+    $default  reduce using rule 286 (ContentsConstraint)
+
+
+State 397
+
+  293 SimpleTableConstraint: '{' TypeRefName • '}'
+
+    '}'  shift, and go to state 461
+
+
+State 398
+
+  225 Constraint: '(' ConstraintSpec ')' •
+
+    $default  reduce using rule 225 (Constraint)
+
+
+State 399
+
+  294 ComponentRelationConstraint: SimpleTableConstraint '{' • AtNotationList '}'
+
+    '@'  shift, and go to state 462
+
+    AtNotationList     go to state 463
+    AtNotationElement  go to state 464
+
+
+State 400
+
+  138 ConcreteTypeDeclaration: TOK_SEQUENCE optSizeOrConstraint TOK_OF optIdentifier • optTag MaybeIndirectTypeDeclaration
+
+    '['  shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    optTag        go to state 465
+    Tag           go to state 109
+    TagTypeValue  go to state 110
+
+
+State 401
+
+  341 optIdentifier: Identifier •
+
+    $default  reduce using rule 341 (optIdentifier)
+
+
+State 402
+
+  137 ConcreteTypeDeclaration: TOK_SET '{' optComponentTypeLists '}' •
+
+    $default  reduce using rule 137 (ConcreteTypeDeclaration)
+
+
+State 403
+
+  139 ConcreteTypeDeclaration: TOK_SET optSizeOrConstraint TOK_OF optIdentifier • optTag MaybeIndirectTypeDeclaration
+
+    '['  shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    optTag        go to state 466
+    Tag           go to state 109
+    TagTypeValue  go to state 110
+
+
+State 404
+
+   67 DefinedType: ComplexTypeReference '{' ActualParameterList '}' •
+
+    $default  reduce using rule 67 (DefinedType)
+
+
+State 405
+
+   80 ActualParameterList: ActualParameterList ',' • ActualParameter
+
+    TOK_bstring              shift, and go to state 204
+    TOK_cstring              shift, and go to state 205
+    TOK_hstring              shift, and go to state 206
+    "identifier"             shift, and go to state 15
+    "number"                 shift, and go to state 207
+    "negative number"        shift, and go to state 208
+    TOK_realnumber           shift, and go to state 209
+    TOK_tuple                shift, and go to state 210
+    TOK_quadruple            shift, and go to state 211
+    TOK_typereference        shift, and go to state 239
+    TOK_capitalreference     shift, and go to state 240
+    TOK_ExtValue_BIT_STRING  shift, and go to state 147
+    TOK_ANY                  shift, and go to state 148
+    TOK_BIT                  shift, and go to state 149
+    TOK_BMPString            shift, and go to state 70
+    TOK_BOOLEAN              shift, and go to state 121
+    TOK_CHARACTER            shift, and go to state 122
+    TOK_CHOICE               shift, and go to state 150
+    TOK_EMBEDDED             shift, and go to state 123
+    TOK_ENUMERATED           shift, and go to state 151
+    TOK_EXTERNAL             shift, and go to state 125
+    TOK_FALSE                shift, and go to state 212
+    TOK_GeneralizedTime      shift, and go to state 126
+    TOK_GeneralString        shift, and go to state 72
+    TOK_GraphicString        shift, and go to state 73
+    TOK_IA5String            shift, and go to state 74
+    TOK_INSTANCE             shift, and go to state 152
+    TOK_INTEGER              shift, and go to state 153
+    TOK_ISO646String         shift, and go to state 75
+    TOK_NULL                 shift, and go to state 321
+    TOK_NumericString        shift, and go to state 76
+    TOK_OBJECT               shift, and go to state 129
+    TOK_ObjectDescriptor     shift, and go to state 77
+    TOK_OCTET                shift, and go to state 130
+    TOK_PrintableString      shift, and go to state 78
+    TOK_REAL                 shift, and go to state 131
+    TOK_RELATIVE_OID         shift, and go to state 132
+    TOK_SEQUENCE             shift, and go to state 154
+    TOK_SET                  shift, and go to state 155
+    TOK_T61String            shift, and go to state 79
+    TOK_TeletexString        shift, and go to state 80
+    TOK_TRUE                 shift, and go to state 214
+    TOK_UniversalString      shift, and go to state 81
+    TOK_UTCTime              shift, and go to state 133
+    TOK_UTF8String           shift, and go to state 82
+    TOK_VideotexString       shift, and go to state 83
+    TOK_VisibleString        shift, and go to state 84
+    '{'                      shift, and go to state 181
+
+    ValueSet                           go to state 322
+    DefinedType                        go to state 156
+    ActualParameter                    go to state 467
+    UntaggedType                       go to state 325
+    TypeDeclaration                    go to state 158
+    ConcreteTypeDeclaration            go to state 159
+    ComplexTypeReference               go to state 160
+    SimpleValue                        go to state 326
+    DefinedValue                       go to state 327
+    RestrictedCharacterStringValue     go to state 219
+    BasicTypeId                        go to state 161
+    BasicTypeId_UniverationCompatible  go to state 137
+    BuiltinType                        go to state 162
+    BasicString                        go to state 138
+    BitStringValue                     go to state 220
+    SignedNumber                       go to state 221
+    RealValue                          go to state 222
+    TypeRefName                        go to state 223
+    Identifier                         go to state 224
+    IdentifierAsReference              go to state 225
+    IdentifierAsValue                  go to state 226
+
+
+State 406
+
+  161 Value: '{' $@5 Opaque •
+  175 Opaque: Opaque • TOK_opaque
+
+    TOK_opaque  shift, and go to state 421
+
+    $default  reduce using rule 161 (Value)
+
+
+State 407
+
+  170 DefinedValue: TypeRefName '.' Identifier •
+
+    $default  reduce using rule 170 (DefinedValue)
+
+
+State 408
+
+  304 Marker: TOK_DEFAULT Value •
+
+    $default  reduce using rule 304 (Marker)
+
+
+State 409
+
+  110 ClassField: TOK_typefieldreference Type optMarker •
+
+    $default  reduce using rule 110 (ClassField)
+
+
+State 410
+
+  154 FieldName: FieldName '.' • TOK_typefieldreference
+  155          | FieldName '.' • TOK_valuefieldreference
+
+    TOK_typefieldreference   shift, and go to state 468
+    TOK_valuefieldreference  shift, and go to state 469
+
+
+State 411
+
+  109 ClassField: TOK_typefieldreference FieldName optMarker •
+
+    $default  reduce using rule 109 (ClassField)
+
+
+State 412
+
+  111 ClassField: TOK_typefieldreference DefinedObjectClass optMarker •
+
+    $default  reduce using rule 111 (ClassField)
+
+
+State 413
+
+  102 optUNIQUE: TOK_UNIQUE •
+
+    $default  reduce using rule 102 (optUNIQUE)
+
+
+State 414
+
+  106 ClassField: TOK_valuefieldreference Type optUNIQUE • optMarker
+
+    TOK_DEFAULT   shift, and go to state 332
+    TOK_OPTIONAL  shift, and go to state 333
+
+    $default  reduce using rule 301 (optMarker)
+
+    optMarker  go to state 470
+    Marker     go to state 338
+
+
+State 415
+
+  107 ClassField: TOK_valuefieldreference FieldName optMarker •
+
+    $default  reduce using rule 107 (ClassField)
+
+
+State 416
+
+  108 ClassField: TOK_valuefieldreference DefinedObjectClass optMarker •
+
+    $default  reduce using rule 108 (ClassField)
+
+
+State 417
+
+  115 WithSyntax: TOK_WITH • TOK_SYNTAX '{' $@4 WithSyntaxList '}'
+
+    TOK_SYNTAX  shift, and go to state 471
+
+
+State 418
+
+  100 ObjectClass: TOK_CLASS '{' FieldSpec '}' optWithSyntax •
+
+    $default  reduce using rule 100 (ObjectClass)
+
+
+State 419
+
+  113 optWithSyntax: WithSyntax •
+
+    $default  reduce using rule 113 (optWithSyntax)
+
+
+State 420
+
+  104 FieldSpec: FieldSpec ',' ClassField •
+
+    $default  reduce using rule 104 (FieldSpec)
+
+
+State 421
+
+  175 Opaque: Opaque TOK_opaque •
+
+    $default  reduce using rule 175 (Opaque)
+
+
+State 422
+
+  236 ElementSetSpec: TOK_ALL TOK_EXCEPT Elements •
+
+    $default  reduce using rule 236 (ElementSetSpec)
+
+
+State 423
+
+  268 SingleTypeConstraint: Constraint •
+
+    $default  reduce using rule 268 (SingleTypeConstraint)
+
+
+State 424
+
+  266 InnerTypeConstraints: TOK_WITH TOK_COMPONENT SingleTypeConstraint •
+
+    $default  reduce using rule 266 (InnerTypeConstraints)
+
+
+State 425
+
+  271 FullSpecification: '{' • TypeConstraints '}'
+  272 PartialSpecification: '{' • "..." ',' TypeConstraints '}'
+
+    "identifier"  shift, and go to state 15
+    "..."         shift, and go to state 472
+
+    TypeConstraints        go to state 473
+    NamedConstraint        go to state 474
+    Identifier             go to state 224
+    IdentifierAsReference  go to state 225
+    IdentifierAsValue      go to state 475
+
+
+State 426
+
+  267 InnerTypeConstraints: TOK_WITH TOK_COMPONENTS MultipleTypeConstraints •
+
+    $default  reduce using rule 267 (InnerTypeConstraints)
+
+
+State 427
+
+  269 MultipleTypeConstraints: FullSpecification •
+
+    $default  reduce using rule 269 (MultipleTypeConstraints)
+
+
+State 428
+
+  270 MultipleTypeConstraints: PartialSpecification •
+
+    $default  reduce using rule 270 (MultipleTypeConstraints)
+
+
+State 429
+
+  244 Elements: '(' ElementSetSpec ')' •
+
+    $default  reduce using rule 244 (Elements)
+
+
+State 430
+
+  233 ElementSetSpecs: ElementSetSpec ',' "..." •
+  234                | ElementSetSpec ',' "..." • ',' ElementSetSpec
+
+    ','  shift, and go to state 476
+
+    $default  reduce using rule 233 (ElementSetSpecs)
+
+
+State 431
+
+  238 Unions: Unions UnionMark Intersections •
+  240 Intersections: Intersections • IntersectionMark IntersectionElements
+
+    '^'               shift, and go to state 364
+    TOK_INTERSECTION  shift, and go to state 365
+
+    $default  reduce using rule 238 (Unions)
+
+    IntersectionMark  go to state 366
+
+
+State 432
+
+  240 Intersections: Intersections IntersectionMark IntersectionElements •
+
+    $default  reduce using rule 240 (Intersections)
+
+
+State 433
+
+  242 IntersectionElements: Elements TOK_EXCEPT Elements •
+
+    $default  reduce using rule 242 (IntersectionElements)
+
+
+State 434
+
+  288 ConstraintRangeSpec: ".." '<' •
+
+    $default  reduce using rule 288 (ConstraintRangeSpec)
+
+
+State 435
+
+  289 ConstraintRangeSpec: '<' ".." •
+  290                    | '<' ".." • '<'
+
+    '<'  shift, and go to state 477
+
+    $default  reduce using rule 289 (ConstraintRangeSpec)
+
+
+State 436
+
+  260 UpperEndValue: TOK_MAX •
+
+    $default  reduce using rule 260 (UpperEndValue)
+
+
+State 437
+
+  256 ValueRange: LowerEndValue ConstraintRangeSpec UpperEndValue •
+
+    $default  reduce using rule 256 (ValueRange)
+
+
+State 438
+
+  259 UpperEndValue: SingleValue •
+
+    $default  reduce using rule 259 (UpperEndValue)
+
+
+State 439
+
+  149 ComplexTypeReferenceAmpList: ComplexTypeReferenceAmpList '.' ComplexTypeReferenceElement •
+
+    $default  reduce using rule 149 (ComplexTypeReferenceAmpList)
+
+
+State 440
+
+  306 IdentifierList: IdentifierList ',' IdentifierElement •
+
+    $default  reduce using rule 306 (IdentifierList)
+
+
+State 441
+
+  197 BuiltinType: TOK_BIT TOK_STRING '{' NamedBitList '}' •
+
+    $default  reduce using rule 197 (BuiltinType)
+
+
+State 442
+
+  313 NamedBitList: NamedBitList ',' • NamedBit
+
+    "identifier"  shift, and go to state 15
+
+    NamedBit    go to state 478
+    Identifier  go to state 377
+
+
+State 443
+
+  314 NamedBit: Identifier '(' • "number" ')'
+  315         | Identifier '(' • DefinedValue ')'
+
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 479
+    TOK_typereference     shift, and go to state 1
+    TOK_capitalreference  shift, and go to state 2
+
+    DefinedValue           go to state 480
+    TypeRefName            go to state 223
+    Identifier             go to state 224
+    IdentifierAsReference  go to state 225
+    IdentifierAsValue      go to state 226
+
+
+State 444
+
+  123 ExtensionAndException: "..." '!' DefinedValue •
+
+    $default  reduce using rule 123 (ExtensionAndException)
+
+
+State 445
+
+  124 ExtensionAndException: "..." '!' SignedNumber •
+
+    $default  reduce using rule 124 (ExtensionAndException)
+
+
+State 446
+
+   96 AlternativeTypeLists: AlternativeTypeLists ',' TOK_VBracketLeft • AlternativeTypeLists TOK_VBracketRight
+
+    "identifier"  shift, and go to state 15
+    "..."         shift, and go to state 280
+    '['           shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    AlternativeTypeLists     go to state 481
+    AlternativeType          go to state 282
+    ExtensionAndException    go to state 283
+    MaybeIndirectTaggedType  go to state 284
+    optTag                   go to state 285
+    Tag                      go to state 109
+    TagTypeValue             go to state 110
+    Identifier               go to state 286
+
+
+State 447
+
+   95 AlternativeTypeLists: AlternativeTypeLists ',' AlternativeType •
+
+    $default  reduce using rule 95 (AlternativeTypeLists)
+
+
+State 448
+
+  131 MaybeIndirectTypeDeclaration: NSTD_IndirectMarker TypeDeclaration •
+
+    $default  reduce using rule 131 (MaybeIndirectTypeDeclaration)
+
+
+State 449
+
+  129 MaybeIndirectTaggedType: optTag MaybeIndirectTypeDeclaration optManyConstraints •
+
+    $default  reduce using rule 129 (MaybeIndirectTaggedType)
+
+
+State 450
+
+  318 UniverationList: UniverationList ',' UniverationElement •
+
+    $default  reduce using rule 318 (UniverationList)
+
+
+State 451
+
+  321 UniverationElement: Identifier '(' DefinedValue • ')'
+
+    ')'  shift, and go to state 482
+
+
+State 452
+
+  320 UniverationElement: Identifier '(' SignedNumber • ')'
+
+    ')'  shift, and go to state 483
+
+
+State 453
+
+  309 NamedNumberList: NamedNumberList ',' NamedNumber •
+
+    $default  reduce using rule 309 (NamedNumberList)
+
+
+State 454
+
+  311 NamedNumber: Identifier '(' DefinedValue • ')'
+
+    ')'  shift, and go to state 484
+
+
+State 455
+
+  310 NamedNumber: Identifier '(' SignedNumber • ')'
+
+    ')'  shift, and go to state 485
+
+
+State 456
+
+   92 ComponentType: TOK_COMPONENTS TOK_OF MaybeIndirectTaggedType •
+
+    $default  reduce using rule 92 (ComponentType)
+
+
+State 457
+
+   89 ComponentTypeLists: ComponentTypeLists ',' TOK_VBracketLeft • ComponentTypeLists TOK_VBracketRight
+
+    "identifier"    shift, and go to state 15
+    TOK_COMPONENTS  shift, and go to state 298
+    "..."           shift, and go to state 280
+    '['             shift, and go to state 105
+
+    $default  reduce using rule 327 (optTag)
+
+    ComponentTypeLists       go to state 486
+    ComponentType            go to state 301
+    ExtensionAndException    go to state 302
+    MaybeIndirectTaggedType  go to state 303
+    optTag                   go to state 285
+    Tag                      go to state 109
+    TagTypeValue             go to state 110
+    Identifier               go to state 304
+
+
+State 458
+
+   88 ComponentTypeLists: ComponentTypeLists ',' ComponentType •
+
+    $default  reduce using rule 88 (ComponentTypeLists)
+
+
+State 459
+
+   90 ComponentType: Identifier MaybeIndirectTaggedType optMarker •
+
+    $default  reduce using rule 90 (ComponentType)
+
+
+State 460
+
+  285 UserDefinedConstraint: TOK_CONSTRAINED TOK_BY '{' • $@6 Opaque
+
+    $default  reduce using rule 284 ($@6)
+
+    $@6  go to state 487
+
+
+State 461
+
+  293 SimpleTableConstraint: '{' TypeRefName '}' •
+
+    $default  reduce using rule 293 (SimpleTableConstraint)
+
+
+State 462
+
+  297 AtNotationElement: '@' • ComponentIdList
+  298                  | '@' • '.' ComponentIdList
+
+    "identifier"  shift, and go to state 15
+    '.'           shift, and go to state 488
+
+    ComponentIdList  go to state 489
+    Identifier       go to state 490
+
+
+State 463
+
+  294 ComponentRelationConstraint: SimpleTableConstraint '{' AtNotationList • '}'
+  296 AtNotationList: AtNotationList • ',' AtNotationElement
+
+    '}'  shift, and go to state 491
+    ','  shift, and go to state 492
+
+
+State 464
+
+  295 AtNotationList: AtNotationElement •
+
+    $default  reduce using rule 295 (AtNotationList)
+
+
+State 465
+
+  138 ConcreteTypeDeclaration: TOK_SEQUENCE optSizeOrConstraint TOK_OF optIdentifier optTag • MaybeIndirectTypeDeclaration
+
+    $default  reduce using rule 130 (NSTD_IndirectMarker)
+
+    NSTD_IndirectMarker           go to state 381
+    MaybeIndirectTypeDeclaration  go to state 493
+
+
+State 466
+
+  139 ConcreteTypeDeclaration: TOK_SET optSizeOrConstraint TOK_OF optIdentifier optTag • MaybeIndirectTypeDeclaration
+
+    $default  reduce using rule 130 (NSTD_IndirectMarker)
+
+    NSTD_IndirectMarker           go to state 381
+    MaybeIndirectTypeDeclaration  go to state 494
+
+
+State 467
+
+   80 ActualParameterList: ActualParameterList ',' ActualParameter •
+
+    $default  reduce using rule 80 (ActualParameterList)
+
+
+State 468
+
+  154 FieldName: FieldName '.' TOK_typefieldreference •
+
+    $default  reduce using rule 154 (FieldName)
+
+
+State 469
+
+  155 FieldName: FieldName '.' TOK_valuefieldreference •
+
+    $default  reduce using rule 155 (FieldName)
+
+
+State 470
+
+  106 ClassField: TOK_valuefieldreference Type optUNIQUE optMarker •
+
+    $default  reduce using rule 106 (ClassField)
+
+
+State 471
+
+  115 WithSyntax: TOK_WITH TOK_SYNTAX • '{' $@4 WithSyntaxList '}'
+
+    '{'  shift, and go to state 495
+
+
+State 472
+
+  272 PartialSpecification: '{' "..." • ',' TypeConstraints '}'
+
+    ','  shift, and go to state 496
+
+
+State 473
+
+  271 FullSpecification: '{' TypeConstraints • '}'
+  274 TypeConstraints: TypeConstraints • ',' NamedConstraint
+
+    '}'  shift, and go to state 497
+    ','  shift, and go to state 498
+
+
+State 474
+
+  273 TypeConstraints: NamedConstraint •
+
+    $default  reduce using rule 273 (TypeConstraints)
+
+
+State 475
+
+  275 NamedConstraint: IdentifierAsValue • optConstraint optPresenceConstraint
+
+    '('  shift, and go to state 194
+
+    $default  reduce using rule 218 (optConstraint)
+
+    optConstraint  go to state 499
+    Constraint     go to state 500
+
+
+State 476
+
+  234 ElementSetSpecs: ElementSetSpec ',' "..." ',' • ElementSetSpec
+
+    TOK_bstring           shift, and go to state 204
+    TOK_cstring           shift, and go to state 205
+    TOK_hstring           shift, and go to state 206
+    "identifier"          shift, and go to state 15
+    "number"              shift, and go to state 207
+    "negative number"     shift, and go to state 208
+    TOK_realnumber        shift, and go to state 209
+    TOK_tuple             shift, and go to state 210
+    TOK_quadruple         shift, and go to state 211
+    TOK_typereference     shift, and go to state 239
+    TOK_capitalreference  shift, and go to state 240
+    TOK_ALL               shift, and go to state 241
+    TOK_FALSE             shift, and go to state 212
+    TOK_FROM              shift, and go to state 242
+    TOK_INCLUDES          shift, and go to state 243
+    TOK_MIN               shift, and go to state 244
+    TOK_NULL              shift, and go to state 213
+    TOK_PATTERN           shift, and go to state 245
+    TOK_SIZE              shift, and go to state 192
+    TOK_TRUE              shift, and go to state 214
+    TOK_WITH              shift, and go to state 246
+    '{'                   shift, and go to state 215
+    '('                   shift, and go to state 248
+
+    DefinedType                     go to state 249
+    DefinedUntaggedType             go to state 250
+    ComplexTypeReference            go to state 160
+    Value                           go to state 251
+    SimpleValue                     go to state 217
+    DefinedValue                    go to state 218
+    RestrictedCharacterStringValue  go to state 219
+    ElementSetSpec                  go to state 501
+    Unions                          go to state 254
+    Intersections                   go to state 255
+    IntersectionElements            go to state 256
+    Elements                        go to state 257
+    SubtypeElements                 go to state 258
+    PermittedAlphabet               go to state 259
+    SizeConstraint                  go to state 260
+    PatternConstraint               go to state 261
+    ValueRange                      go to state 262
+    LowerEndValue                   go to state 263
+    SingleValue                     go to state 264
+    BitStringValue                  go to state 220
+    ContainedSubtype                go to state 265
+    InnerTypeConstraints            go to state 266
+    SignedNumber                    go to state 221
+    RealValue                       go to state 222
+    TypeRefName                     go to state 223
+    Identifier                      go to state 224
+    IdentifierAsReference           go to state 225
+    IdentifierAsValue               go to state 226
+
+
+State 477
+
+  290 ConstraintRangeSpec: '<' ".." '<' •
+
+    $default  reduce using rule 290 (ConstraintRangeSpec)
+
+
+State 478
+
+  313 NamedBitList: NamedBitList ',' NamedBit •
+
+    $default  reduce using rule 313 (NamedBitList)
+
+
+State 479
+
+  314 NamedBit: Identifier '(' "number" • ')'
+
+    ')'  shift, and go to state 502
+
+
+State 480
+
+  315 NamedBit: Identifier '(' DefinedValue • ')'
+
+    ')'  shift, and go to state 503
+
+
+State 481
+
+   95 AlternativeTypeLists: AlternativeTypeLists • ',' AlternativeType
+   96                     | AlternativeTypeLists • ',' TOK_VBracketLeft AlternativeTypeLists TOK_VBracketRight
+   96                     | AlternativeTypeLists ',' TOK_VBracketLeft AlternativeTypeLists • TOK_VBracketRight
+
+    TOK_VBracketRight  shift, and go to state 504
+    ','                shift, and go to state 380
+
+
+State 482
+
+  321 UniverationElement: Identifier '(' DefinedValue ')' •
+
+    $default  reduce using rule 321 (UniverationElement)
+
+
+State 483
+
+  320 UniverationElement: Identifier '(' SignedNumber ')' •
+
+    $default  reduce using rule 320 (UniverationElement)
+
+
+State 484
+
+  311 NamedNumber: Identifier '(' DefinedValue ')' •
+
+    $default  reduce using rule 311 (NamedNumber)
+
+
+State 485
+
+  310 NamedNumber: Identifier '(' SignedNumber ')' •
+
+    $default  reduce using rule 310 (NamedNumber)
+
+
+State 486
+
+   88 ComponentTypeLists: ComponentTypeLists • ',' ComponentType
+   89                   | ComponentTypeLists • ',' TOK_VBracketLeft ComponentTypeLists TOK_VBracketRight
+   89                   | ComponentTypeLists ',' TOK_VBracketLeft ComponentTypeLists • TOK_VBracketRight
+
+    TOK_VBracketRight  shift, and go to state 505
+    ','                shift, and go to state 392
+
+
+State 487
+
+  285 UserDefinedConstraint: TOK_CONSTRAINED TOK_BY '{' $@6 • Opaque
+
+    TOK_opaque    shift, and go to state 344
+    "identifier"  shift, and go to state 15
+
+    Opaque            go to state 506
+    OpaqueFirstToken  go to state 346
+    Identifier        go to state 347
+
+
+State 488
+
+  298 AtNotationElement: '@' '.' • ComponentIdList
+
+    "identifier"  shift, and go to state 15
+
+    ComponentIdList  go to state 507
+    Identifier       go to state 490
+
+
+State 489
+
+  297 AtNotationElement: '@' ComponentIdList •
+  300 ComponentIdList: ComponentIdList • '.' Identifier
+
+    '.'  shift, and go to state 508
+
+    $default  reduce using rule 297 (AtNotationElement)
+
+
+State 490
+
+  299 ComponentIdList: Identifier •
+
+    $default  reduce using rule 299 (ComponentIdList)
+
+
+State 491
+
+  294 ComponentRelationConstraint: SimpleTableConstraint '{' AtNotationList '}' •
+
+    $default  reduce using rule 294 (ComponentRelationConstraint)
+
+
+State 492
+
+  296 AtNotationList: AtNotationList ',' • AtNotationElement
+
+    '@'  shift, and go to state 462
+
+    AtNotationElement  go to state 509
+
+
+State 493
+
+  138 ConcreteTypeDeclaration: TOK_SEQUENCE optSizeOrConstraint TOK_OF optIdentifier optTag MaybeIndirectTypeDeclaration •
+
+    $default  reduce using rule 138 (ConcreteTypeDeclaration)
+
+
+State 494
+
+  139 ConcreteTypeDeclaration: TOK_SET optSizeOrConstraint TOK_OF optIdentifier optTag MaybeIndirectTypeDeclaration •
+
+    $default  reduce using rule 139 (ConcreteTypeDeclaration)
+
+
+State 495
+
+  115 WithSyntax: TOK_WITH TOK_SYNTAX '{' • $@4 WithSyntaxList '}'
+
+    $default  reduce using rule 114 ($@4)
+
+    $@4  go to state 510
+
+
+State 496
+
+  272 PartialSpecification: '{' "..." ',' • TypeConstraints '}'
+
+    "identifier"  shift, and go to state 15
+
+    TypeConstraints        go to state 511
+    NamedConstraint        go to state 474
+    Identifier             go to state 224
+    IdentifierAsReference  go to state 225
+    IdentifierAsValue      go to state 475
+
+
+State 497
+
+  271 FullSpecification: '{' TypeConstraints '}' •
+
+    $default  reduce using rule 271 (FullSpecification)
+
+
+State 498
+
+  274 TypeConstraints: TypeConstraints ',' • NamedConstraint
+
+    "identifier"  shift, and go to state 15
+
+    NamedConstraint        go to state 512
+    Identifier             go to state 224
+    IdentifierAsReference  go to state 225
+    IdentifierAsValue      go to state 475
+
+
+State 499
+
+  275 NamedConstraint: IdentifierAsValue optConstraint • optPresenceConstraint
+
+    TOK_ABSENT    shift, and go to state 513
+    TOK_OPTIONAL  shift, and go to state 514
+    TOK_PRESENT   shift, and go to state 515
+
+    $default  reduce using rule 276 (optPresenceConstraint)
+
+    optPresenceConstraint  go to state 516
+    PresenceConstraint     go to state 517
+
+
+State 500
+
+  219 optConstraint: Constraint •
+
+    $default  reduce using rule 219 (optConstraint)
+
+
+State 501
+
+  234 ElementSetSpecs: ElementSetSpec ',' "..." ',' ElementSetSpec •
+
+    $default  reduce using rule 234 (ElementSetSpecs)
+
+
+State 502
+
+  314 NamedBit: Identifier '(' "number" ')' •
+
+    $default  reduce using rule 314 (NamedBit)
+
+
+State 503
+
+  315 NamedBit: Identifier '(' DefinedValue ')' •
+
+    $default  reduce using rule 315 (NamedBit)
+
+
+State 504
+
+   96 AlternativeTypeLists: AlternativeTypeLists ',' TOK_VBracketLeft AlternativeTypeLists TOK_VBracketRight •
+
+    $default  reduce using rule 96 (AlternativeTypeLists)
+
+
+State 505
+
+   89 ComponentTypeLists: ComponentTypeLists ',' TOK_VBracketLeft ComponentTypeLists TOK_VBracketRight •
+
+    $default  reduce using rule 89 (ComponentTypeLists)
+
+
+State 506
+
+  175 Opaque: Opaque • TOK_opaque
+  285 UserDefinedConstraint: TOK_CONSTRAINED TOK_BY '{' $@6 Opaque •
+
+    TOK_opaque  shift, and go to state 421
+
+    $default  reduce using rule 285 (UserDefinedConstraint)
+
+
+State 507
+
+  298 AtNotationElement: '@' '.' ComponentIdList •
+  300 ComponentIdList: ComponentIdList • '.' Identifier
+
+    '.'  shift, and go to state 508
+
+    $default  reduce using rule 298 (AtNotationElement)
+
+
+State 508
+
+  300 ComponentIdList: ComponentIdList '.' • Identifier
+
+    "identifier"  shift, and go to state 15
+
+    Identifier  go to state 518
+
+
+State 509
+
+  296 AtNotationList: AtNotationList ',' AtNotationElement •
+
+    $default  reduce using rule 296 (AtNotationList)
+
+
+State 510
+
+  115 WithSyntax: TOK_WITH TOK_SYNTAX '{' $@4 • WithSyntaxList '}'
+
+    TOK_whitespace           shift, and go to state 519
+    TOK_typefieldreference   shift, and go to state 268
+    TOK_valuefieldreference  shift, and go to state 269
+    TOK_Literal              shift, and go to state 520
+    '['                      shift, and go to state 521
+
+    WithSyntaxList           go to state 522
+    WithSyntaxToken          go to state 523
+    PrimitiveFieldReference  go to state 524
+
+
+State 511
+
+  272 PartialSpecification: '{' "..." ',' TypeConstraints • '}'
+  274 TypeConstraints: TypeConstraints • ',' NamedConstraint
+
+    '}'  shift, and go to state 525
+    ','  shift, and go to state 498
+
+
+State 512
+
+  274 TypeConstraints: TypeConstraints ',' NamedConstraint •
+
+    $default  reduce using rule 274 (TypeConstraints)
+
+
+State 513
+
+  279 PresenceConstraint: TOK_ABSENT •
+
+    $default  reduce using rule 279 (PresenceConstraint)
+
+
+State 514
+
+  280 PresenceConstraint: TOK_OPTIONAL •
+
+    $default  reduce using rule 280 (PresenceConstraint)
+
+
+State 515
+
+  278 PresenceConstraint: TOK_PRESENT •
+
+    $default  reduce using rule 278 (PresenceConstraint)
+
+
+State 516
+
+  275 NamedConstraint: IdentifierAsValue optConstraint optPresenceConstraint •
+
+    $default  reduce using rule 275 (NamedConstraint)
+
+
+State 517
+
+  277 optPresenceConstraint: PresenceConstraint •
+
+    $default  reduce using rule 277 (optPresenceConstraint)
+
+
+State 518
+
+  300 ComponentIdList: ComponentIdList '.' Identifier •
+
+    $default  reduce using rule 300 (ComponentIdList)
+
+
+State 519
+
+  118 WithSyntaxToken: TOK_whitespace •
+
+    $default  reduce using rule 118 (WithSyntaxToken)
+
+
+State 520
+
+  119 WithSyntaxToken: TOK_Literal •
+
+    $default  reduce using rule 119 (WithSyntaxToken)
+
+
+State 521
+
+  121 WithSyntaxToken: '[' • WithSyntaxList ']'
+
+    TOK_whitespace           shift, and go to state 519
+    TOK_typefieldreference   shift, and go to state 268
+    TOK_valuefieldreference  shift, and go to state 269
+    TOK_Literal              shift, and go to state 520
+    '['                      shift, and go to state 521
+
+    WithSyntaxList           go to state 526
+    WithSyntaxToken          go to state 523
+    PrimitiveFieldReference  go to state 524
+
+
+State 522
+
+  115 WithSyntax: TOK_WITH TOK_SYNTAX '{' $@4 WithSyntaxList • '}'
+  117 WithSyntaxList: WithSyntaxList • WithSyntaxToken
+
+    TOK_whitespace           shift, and go to state 519
+    TOK_typefieldreference   shift, and go to state 268
+    TOK_valuefieldreference  shift, and go to state 269
+    TOK_Literal              shift, and go to state 520
+    '}'                      shift, and go to state 527
+    '['                      shift, and go to state 521
+
+    WithSyntaxToken          go to state 528
+    PrimitiveFieldReference  go to state 524
+
+
+State 523
+
+  116 WithSyntaxList: WithSyntaxToken •
+
+    $default  reduce using rule 116 (WithSyntaxList)
+
+
+State 524
+
+  120 WithSyntaxToken: PrimitiveFieldReference •
+
+    $default  reduce using rule 120 (WithSyntaxToken)
+
+
+State 525
+
+  272 PartialSpecification: '{' "..." ',' TypeConstraints '}' •
+
+    $default  reduce using rule 272 (PartialSpecification)
+
+
+State 526
+
+  117 WithSyntaxList: WithSyntaxList • WithSyntaxToken
+  121 WithSyntaxToken: '[' WithSyntaxList • ']'
+
+    TOK_whitespace           shift, and go to state 519
+    TOK_typefieldreference   shift, and go to state 268
+    TOK_valuefieldreference  shift, and go to state 269
+    TOK_Literal              shift, and go to state 520
+    '['                      shift, and go to state 521
+    ']'                      shift, and go to state 529
+
+    WithSyntaxToken          go to state 528
+    PrimitiveFieldReference  go to state 524
+
+
+State 527
+
+  115 WithSyntax: TOK_WITH TOK_SYNTAX '{' $@4 WithSyntaxList '}' •
+
+    $default  reduce using rule 115 (WithSyntax)
+
+
+State 528
+
+  117 WithSyntaxList: WithSyntaxList WithSyntaxToken •
+
+    $default  reduce using rule 117 (WithSyntaxList)
+
+
+State 529
+
+  121 WithSyntaxToken: '[' WithSyntaxList ']' •
+
+    $default  reduce using rule 121 (WithSyntaxToken)
