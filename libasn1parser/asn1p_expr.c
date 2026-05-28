@@ -206,6 +206,10 @@ asn1p_expr_clone_impl(asn1p_expr_t *expr, int skip_extensions, asn1p_expr_t *(*r
 	CLVRCLONE(value, asn1p_value_clone_with_resolver);
 	CLVRCLONE(marker.default_value, asn1p_value_clone_with_resolver);
 	CLCLONE(with_syntax, asn1p_wsyntx_clone);
+	if(expr->rhs_pspecs) {
+		clone->rhs_pspecs = asn1p_expr_clone_impl(expr->rhs_pspecs, 0, r, rarg);
+		if(!clone->rhs_pspecs) { asn1p_expr_free(clone); return NULL; }
+	}
 
 	/*
 	 * Copy all the children of this expr.

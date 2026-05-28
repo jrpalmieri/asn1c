@@ -257,7 +257,12 @@ c_member_name(arg_t *arg, asn1p_expr_t *expr) {
     /* NB: do not use part_name, doesn't work for -fcompound-names */
     abuf_str(&ab, c_name_impl(arg, arg->expr, 0).base_name);
     abuf_str(&ab, "_");
-    abuf_str(&ab, asn1c_make_identifier(0, expr, 0));
+    const char *mid = asn1c_make_identifier(0, expr, 0);
+    abuf_str(&ab, mid);
+    /* "t" as a member name produces _{base}_t which collides with the
+     * typedef suffix; append _ to break the collision. */
+    if(strcmp(mid, "t") == 0)
+        abuf_str(&ab, "_");
 
     return ab.buffer;
 }

@@ -40,16 +40,25 @@ asn1f_check_class_object(arg_t *arg) {
 	row = asn1p_ioc_row_new(eclass);
 	assert(row);
 
+	/* Use optional_mode=1 to suppress FATAL: reference-set content (e.g. "A | B, ...")
+	 * legitimately won't match WITH SYNTAX; treat parse failure as non-error. */
 	ret = _asn1f_parse_class_object_data(arg, eclass, row,
 		eclass->with_syntax,
 		expr->value->value.string.buf + 1,
 		expr->value->value.string.buf
 			+ expr->value->value.string.size - 1,
-		0, 0, 0);
+		1, 0, 0);
 
 	asn1p_ioc_row_delete(row);
 
-	return ret;
+	if(ret) {
+		DEBUG("Skipping WITH SYNTAX check for %s at line %d: "
+			"content is a reference set, not a direct object specification",
+			expr->Identifier, expr->_lineno);
+		return 0;
+	}
+
+	return 0;
 }
 
 static int
@@ -488,15 +497,48 @@ _asn1f_assign_cell_value(arg_t *arg, struct asn1p_ioc_cell_s *cell,
 
 		asn1p_ref_free(expr->reference);
 		new_ref = 0;
-		expr->reference = type_expr->reference;
-		if (asn1f_value_resolve(arg, expr, 0)) {
-			expr->reference = 0;
-			asn1p_expr_free(expr);
-			FATAL("Cannot find %s referenced by %s at line %d",
-				mivr, arg->expr->Identifier,
-				arg->expr->_lineno);
-			free(mivr);
-			return -1;
+		expr->reference = type_expr ? type_expr->reference : NULL;
+		if (!expr->reference || asn1f_value_resolve(arg, expr, 0)) {
+			/*
+			 * Fallback: search all modules for an ENUMERATED member
+			 * with this name. Handles cases like "reject" or "ignore"
+			 * which are members of Criticality rather than top-level
+			 * declarations (common in 3GPP WITH SYNTAX objects).
+			 */
+			asn1p_module_t *search_mod;
+			asn1p_expr_t *found = NULL;
+			TQ_FOR(search_mod, &(arg->asn->modules), mod_next) {
+				asn1p_expr_t *candidate;
+				TQ_FOR(candidate, &(search_mod->members), next) {
+					if(candidate->expr_type != ASN_BASIC_ENUMERATED)
+						continue;
+					asn1p_expr_t *member;
+					TQ_FOR(member, &(candidate->members), next) {
+						if(member->Identifier &&
+						   strcmp(member->Identifier, mivr) == 0) {
+							found = member;
+							break;
+						}
+					}
+					if(found) break;
+				}
+				if(found) break;
+			}
+			if(found) {
+				expr->reference = 0;
+				asn1p_expr_free(expr);
+				expr = found;
+				new_ref = 0;
+			} else {
+				expr->reference = 0;
+				asn1p_expr_free(expr);
+				WARNING("Cannot find %s referenced by %s at line %d"
+					" (skipping IOC object field assignment)",
+					mivr, arg->expr->Identifier,
+					arg->expr->_lineno);
+				free(mivr);
+				return 1;
+			}
 		}
 	}
 

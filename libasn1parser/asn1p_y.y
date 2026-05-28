@@ -9,8 +9,6 @@
 
 #include "asn1parser.h"
 
-#define YYPARSE_PARAM	param
-#define YYPARSE_PARAM_TYPE	void **
 #define YYERROR_VERBOSE
 #define YYDEBUG 1
 #define YYFPRINTF   prefixed_fprintf
@@ -38,11 +36,8 @@ prefixed_fprintf(FILE *f, const char *fmt, ...) {
 }
 
 int yylex(void);
-static int yyerror(const char *msg);
+static int yyerror(void **param, const char *msg);
 
-#ifdef	YYBYACC
-int yyparse(void **param);	/* byacc does not produce a prototype */
-#endif
 void asn1p_lexer_hack_push_opaque_state(void);
 void asn1p_lexer_hack_enable_with_syntax(void);
 void asn1p_lexer_hack_push_encoding_control(void);
@@ -70,7 +65,7 @@ static asn1p_module_t *currentModule;
 
 #define	checkmem(ptr)	do {						\
 		if(!(ptr))						\
-		return yyerror("Memory failure");			\
+		return yyerror(param, "Memory failure");		\
 	} while(0)
 
 #define	CONSTRAINT_INSERT(root, constr_type, arg1, arg2) do {		\
@@ -112,6 +107,8 @@ static asn1p_module_t *currentModule;
  * a_*:   ASN-specific types.
  * tv_*:  Locally meaningful types.
  */
+%parse-param {void **param}
+
 %union {
 	asn1p_t			*a_grammar;
 	asn1p_module_flags_e	 a_module_flags;
@@ -412,10 +409,10 @@ static asn1p_module_t *currentModule;
 
 ParsedGrammar:
 	UTF8_BOM ModuleList {
-		*(void **)param = $2;
+		*param = $2;
 	}
 	| ModuleList {
-		*(void **)param = $1;
+		*param = $1;
 	}
 	;
 
@@ -632,6 +629,36 @@ Assignment:
 		asn1p_module_member_add($$, $1);
 	}
 	/*
+	 * Information Object Set definition using WITH SYNTAX notation.
+	 * === EXAMPLE ===
+	 * HandoverRequest-IEs XNAP-PROTOCOL-IES ::= {
+	 *     { ID id-X CRITICALITY reject TYPE T PRESENCE mandatory } | ...
+	 * }
+	 * === EOF ===
+	 * The RHS is captured opaquely for later fixer processing.
+	 */
+	| TypeRefName TOK_capitalreference TOK_PPEQ
+		'{' { asn1p_lexer_hack_push_opaque_state(); } Opaque /* '}' */ {
+		$$ = asn1p_module_new();
+		checkmem($$);
+		asn1p_expr_t *expr = NEW_EXPR();
+		checkmem(expr);
+		expr->Identifier = $1;
+		expr->reference = asn1p_ref_new(yylineno, currentModule);
+		checkmem(expr->reference);
+		asn1p_ref_add_component(expr->reference, $2, RLT_CAPITALS);
+		free($2);
+		expr->meta_type = AMT_VALUESET;
+		expr->expr_type = A1TC_REFERENCE;
+		expr->constraints = asn1p_constraint_new(yylineno, currentModule);
+		checkmem(expr->constraints);
+		expr->constraints->type = ACT_EL_VALUE;
+		expr->constraints->value = asn1p_value_frombuf($6.buf, $6.len, 0);
+		checkmem(expr->constraints->value);
+		expr->constraints->value->type = ATV_UNPARSED;
+		asn1p_module_member_add($$, expr);
+	}
+	/*
 	 * Value set definition
 	 * === EXAMPLE ===
 	 * EvenNumbers INTEGER ::= { 2 | 4 | 6 | 8 }
@@ -660,7 +687,7 @@ Assignment:
 	 * Erroneous attemps
 	 */
 	| BasicString {
-		return yyerror(
+		return yyerror(param,
 			"Attempt to redefine a standard basic string type, "
 			"please comment out or remove this type redefinition.");
 	}
@@ -678,7 +705,7 @@ optImports:
 ImportsDefinition:
 	TOK_IMPORTS optImportsBundleSet ';' {
 		if(!saved_aid && 0)
-			return yyerror("Unterminated IMPORTS FROM, "
+			return yyerror(param, "Unterminated IMPORTS FROM, "
 					"expected semicolon ';'");
 		saved_aid = 0;
 		$$ = $2;
@@ -687,7 +714,7 @@ ImportsDefinition:
 	 * Some error cases.
 	 */
 	| TOK_IMPORTS TOK_FROM /* ... */ {
-		return yyerror("Empty IMPORTS list");
+		return yyerror(param, "Empty IMPORTS list");
 	}
 	;
 
@@ -1073,6 +1100,10 @@ AlternativeTypeLists:
 	| AlternativeTypeLists ',' AlternativeType {
 		$$ = $1;
 		asn1p_expr_add($$, $3);
+	}
+	| AlternativeTypeLists ',' TOK_VBracketLeft AlternativeTypeLists TOK_VBracketRight {
+		$$ = $1;
+		asn1p_expr_add_many($$, $4);
 	}
 	;
 
@@ -2311,11 +2342,11 @@ Enumerations:
         asn1p_expr_t *first_memb = TQ_FIRST(&($$->members));
         if(first_memb) {
             if(first_memb->expr_type == A1TC_EXTENSIBLE) {
-                return yyerror(
+                return yyerror(param,
                     "The ENUMERATION cannot start with extension (...).");
             }
         } else {
-            return yyerror(
+            return yyerror(param,
                 "The ENUMERATION list cannot be empty.");
         }
     }
@@ -2624,8 +2655,9 @@ _fixup_anonymous_identifier(asn1p_expr_t *expr) {
 }
 
 static int
-yyerror(const char *msg) {
+yyerror(void **param, const char *msg) {
 	extern char *asn1p_text;
+	(void)param;
 	fprintf(stderr,
 		"ASN.1 grammar parse error "
 		"near %s:%d (token \"%s\"): %s\n",

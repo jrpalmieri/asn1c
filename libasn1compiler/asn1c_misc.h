@@ -15,6 +15,12 @@ enum ami_flags_e {
 const char *asn1c_make_identifier(enum ami_flags_e, asn1p_expr_t *expr, ...);
 
 /*
+ * Return prefix+filename in a static buffer (valid until next call).
+ * If no prefix set, returns identifier unchanged.
+ */
+const char *asn1c_prefixed_filename(const char *identifier);
+
+/*
  * Return the type name of the specified expression.
  * The returned string is a pointer to a statically allocated buffer which is
  * going to be clobbered by the subsequent invocation of this function.

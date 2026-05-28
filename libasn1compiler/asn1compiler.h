@@ -97,6 +97,11 @@ enum asn1c_flags {
 	 * -debug-output-origin-lines
 	 */
 	A1C_DEBUG_OUTPUT_ORIGIN_LINES = 0x400000,
+	/*
+	 * -fhave_native64
+	 * Use int64_t/uint64_t for the target platform.
+	 */
+	A1C_HAVE_NATIVE_64	= 0x800000,
 };
 
 /*
@@ -109,5 +114,11 @@ void asn1c_debug_type_naming(asn1p_t *asn, enum asn1c_flags,
                              char **asn_type_names);
 
 void asn1c__add_pdu_type(const char *typename);
+
+/*
+ * Set the prefix prepended to all generated user-type identifiers and
+ * output filenames. Call before compilation. Empty string or NULL = no prefix.
+ */
+void asn1c_set_prefix(const char *prefix);
 
 #endif	/* ASN1_COMPILER_H */

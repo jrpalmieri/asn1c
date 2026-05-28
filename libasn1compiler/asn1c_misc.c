@@ -4,6 +4,55 @@
 #include <asn1fix_crange.h>	/* constraint groker from libasn1fix */
 #include <asn1fix_export.h>	/* other exportable stuff from libasn1fix */
 
+static const char *g_asn1c_prefix = "";
+static char *g_prefix_buf = NULL;
+static size_t g_prefix_buf_size = 0;
+
+void
+asn1c_set_prefix(const char *prefix) {
+	g_asn1c_prefix = prefix ? prefix : "";
+}
+
+const char *
+asn1c_prefixed_filename(const char *identifier) {
+	size_t plen, ilen, needed;
+	if(!g_asn1c_prefix[0]) return identifier;
+	plen = strlen(g_asn1c_prefix);
+	ilen = strlen(identifier);
+	needed = plen + ilen + 1;
+	if(needed > g_prefix_buf_size) {
+		char *nb = realloc(g_prefix_buf, needed);
+		if(!nb) return identifier;
+		g_prefix_buf = nb;
+		g_prefix_buf_size = needed;
+	}
+	memcpy(g_prefix_buf, g_asn1c_prefix, plen);
+	memcpy(g_prefix_buf + plen, identifier, ilen + 1);
+	return g_prefix_buf;
+}
+
+static char *g_ptbuf = NULL;
+static size_t g_ptbuf_size = 0;
+
+static const char *
+prefix_for_type(const char *typename_str) {
+	size_t plen, tlen, needed;
+	if(!typename_str) return typename_str;
+	if(!g_asn1c_prefix[0]) return typename_str;
+	plen = strlen(g_asn1c_prefix);
+	tlen = strlen(typename_str);
+	needed = plen + tlen + 1;
+	if(needed > g_ptbuf_size) {
+		char *nb = realloc(g_ptbuf, needed);
+		if(!nb) return typename_str;
+		g_ptbuf = nb;
+		g_ptbuf_size = needed;
+	}
+	memcpy(g_ptbuf, g_asn1c_prefix, plen);
+	memcpy(g_ptbuf + plen, typename_str, tlen + 1);
+	return g_ptbuf;
+}
+
 /*
  * Checks that the given string is not a reserved C/C++ keyword [1],[2].
  * _* keywords not included, since asn1 identifiers cannot begin with hyphen [3]
@@ -53,7 +102,7 @@ asn1c_make_identifier(enum ami_flags_e flags, asn1p_expr_t *expr, ...) {
 	char *first = 0;
 	ssize_t size = 0;
 	char *p;
-	char *prefix = NULL;
+	const char *prefix = (expr && (flags & AMI_USE_PREFIX)) ? g_asn1c_prefix : NULL;
 	char *sptr[4], **psptr = &sptr[0];
 	int sptr_cnt = 0;
 
@@ -307,24 +356,37 @@ asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format) {
 	case TNF_UNMODIFIED:
 		return asn1c_make_identifier(AMI_MASK_ONLY_SPACES | AMI_NODELIMITER,
 			0, MODULE_NAME_OF(exprid), exprid ? exprid->Identifier : typename, (char*)0);
-	case TNF_INCLUDE:
+	case TNF_INCLUDE: {
+		/* For user-defined types the include file name carries the prefix. */
+		const char *id = exprid ? exprid->Identifier : typename;
+		if(!stdname) id = prefix_for_type(id);
 		return asn1c_make_identifier(
 			AMI_MASK_ONLY_SPACES | AMI_NODELIMITER,
 			0, ((!stdname || (arg->flags & A1C_INCLUDES_QUOTED))
 				? "\"" : "<"),
 			MODULE_NAME_OF(exprid),
-			exprid ? exprid->Identifier : typename,
+			id,
 			((!stdname || (arg->flags & A1C_INCLUDES_QUOTED))
 				? ".h\"" : ".h>"), (char*)0);
+	}
 	case TNF_SAFE:
+		if(!exprid && !stdname)
+			return asn1c_make_identifier(0, 0, prefix_for_type(typename), (char*)0);
 		return asn1c_make_identifier(0, exprid, typename, (char*)0);
 	case TNF_CTYPE:	/* C type */
 	case TNF_CONSTYPE:	/* C type */
+		if(!exprid && !stdname)
+			return asn1c_make_identifier(0, 0,
+				prefix_for_type(typename), "t", (char*)0);
 		return asn1c_make_identifier(0, exprid,
 				exprid?"t":typename, exprid?0:"t", (char*)0);
 	case TNF_RSAFE:	/* Recursion-safe type */
+		if(!exprid && !stdname)
+			return asn1c_make_identifier(AMI_CHECK_RESERVED | AMI_NODELIMITER, 0,
+				"struct", " ", prefix_for_type(typename), (char*)0);
 		return asn1c_make_identifier(AMI_CHECK_RESERVED | AMI_NODELIMITER, 0,
-			"struct", " ", MODULE_NAME_OF(exprid), typename, (char*)0);
+			"struct", " ", MODULE_NAME_OF(exprid),
+			exprid ? exprid->Identifier : typename, (char*)0);
 	}
 
 	assert(!"unreachable");

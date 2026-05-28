@@ -495,7 +495,7 @@ asn1c_save_streams(arg_t *arg, asn1c_dep_chainset *deps, const char *destdir,
 		return -1;
 	}
 
-	filename = strdup(asn1c_make_identifier(AMI_MASK_ONLY_SPACES, expr, (char*)0));
+	filename = strdup(asn1c_prefixed_filename(asn1c_make_identifier(AMI_MASK_ONLY_SPACES, expr, (char*)0)));
 	fp_c = asn1c_open_file(destdir, filename, ".c", &tmpname_c);
     if(fp_c == NULL) {
         return -1;
@@ -511,7 +511,7 @@ asn1c_save_streams(arg_t *arg, asn1c_dep_chainset *deps, const char *destdir,
 	generate_preamble(arg, fp_c, optc, argv);
 	generate_preamble(arg, fp_h, optc, argv);
 
-	header_id = asn1c_make_identifier(0, expr, NULL);
+	header_id = asn1c_prefixed_filename(asn1c_make_identifier(0, expr, NULL));
 	safe_fprintf(fp_h,
 		"#ifndef\t_%s_H_\n"
 		"#define\t_%s_H_\n"

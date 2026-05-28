@@ -460,6 +460,7 @@ WITH			return TOK_WITH;
 
 
 <INITIAL,extended_values>{WSP}+	/* Ignore whitespace */
+"\xc2\xa0"	/* UTF-8 non-breaking space: treat as whitespace */
 
 
 [{][\t\r\v\f\n ]*[0-7][,][\t\r\v\f\n ]*[0-9]+[\t\r\v\f\n ]*[}]	{
