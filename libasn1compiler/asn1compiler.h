@@ -128,6 +128,6 @@ void asn1c_set_prefix(const char *prefix);
  * The common dir is placed as a sibling of destdir's parent.
  * Must be called before asn1_compile().
  */
-void asn1c_set_common_dir(const char *name, const char *destdir);
+int asn1c_set_common_dir(const char *name, const char *destdir);
 
 #endif	/* ASN1_COMPILER_H */

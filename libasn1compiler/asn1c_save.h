@@ -14,7 +14,7 @@ int asn1c_save_compiled_output(arg_t *arg, const char *datadir, const char* dest
  * The common dir is placed as a sibling of destdir's parent.
  * Must be called before asn1c_save_compiled_output().
  */
-void asn1c_set_common_dir(const char *name, const char *destdir);
+int asn1c_set_common_dir(const char *name, const char *destdir);
 
 /*
  * Return the relative #include prefix for common/skeleton headers

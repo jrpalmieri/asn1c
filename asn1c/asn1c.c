@@ -433,7 +433,9 @@ main(int ac, char **av) {
             fprintf(stderr, "-fcommon requires -D <destdir>\n");
             exit(EX_USAGE);
         }
-        asn1c_set_common_dir(common_dir_name, destdir);
+        if(asn1c_set_common_dir(common_dir_name, destdir) != 0) {
+            exit(EX_USAGE);
+        }
         free(common_dir_name);
         common_dir_name = NULL;
     }

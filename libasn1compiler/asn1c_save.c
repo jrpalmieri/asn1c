@@ -14,6 +14,7 @@
 static char *g_common_dir = NULL;            /* Path to common dir for copying  */
 static char *g_common_include_prefix = NULL; /* Relative #include prefix, e.g. "../../asn1c/" */
 static char *g_common_makepath = NULL;       /* Common dir path for Makefile entries (trailing /) */
+static int   g_common_overwrite = 0;         /* User confirmed overwrite of existing common dir */
 
 static void
 strip_last_path_component(char *path) {
@@ -40,7 +41,7 @@ count_path_depth(const char *path) {
     return depth;
 }
 
-void
+int
 asn1c_set_common_dir(const char *name, const char *destdir) {
     char dest[PATH_MAX], parent[PATH_MAX], grandparent[PATH_MAX];
 
@@ -82,14 +83,30 @@ asn1c_set_common_dir(const char *name, const char *destdir) {
     strcat(g_common_include_prefix, name);
     strcat(g_common_include_prefix, "/");
 
-    /* Create common dir */
-    if(mkdir(g_common_dir, 0755) < 0 && errno != EEXIST) {
-        fprintf(stderr, "WARNING: Cannot create common directory %s: %s\n",
-            g_common_dir, strerror(errno));
+    /* Create common dir, or prompt user if it already exists */
+    g_common_overwrite = 0;
+    if(mkdir(g_common_dir, 0755) < 0) {
+        if(errno == EEXIST) {
+            fprintf(stderr,
+                "Common directory already exists: %s\n"
+                "Overwrite existing files? [y/N] ",
+                g_common_dir);
+            fflush(stderr);
+            char ans[16] = {0};
+            if(fgets(ans, sizeof(ans), stdin) == NULL || (ans[0] != 'y' && ans[0] != 'Y')) {
+                fprintf(stderr, "Aborted.\n");
+                return -1;
+            }
+            g_common_overwrite = 1;
+        } else {
+            fprintf(stderr, "WARNING: Cannot create common directory %s: %s\n",
+                g_common_dir, strerror(errno));
+        }
     }
 
     fprintf(stderr, "Common files directory: %s (include prefix: \"%s\")\n",
         g_common_dir, g_common_include_prefix);
+    return 0;
 }
 
 const char *
@@ -853,6 +870,19 @@ asn1c_copy_over(arg_t *arg, const char *destdir, const char *path,
 					"File %s is already here as %s\n",
 					path, fname);
 				return 1;
+			} else if(g_common_overwrite && g_common_makepath
+			          && destdir == g_common_makepath) {
+				/* User confirmed overwrite of common dir: remove and re-copy */
+				if(unlink(fname) == 0
+				&& (use_real_copy ? real_copy(path, fname)
+				                  : symlink(path, fname)) == 0) {
+					safe_fprintf(stderr, "Overwriting %s\t-> %s\n",
+					             path, fname);
+					return 1;
+				}
+				safe_fprintf(stderr, "Overwrite %s -> %s failed: %s\n",
+				             path, fname, strerror(errno));
+				return -1;
 			} else {
 				safe_fprintf(stderr,
 					"Retaining local %s (%s suggested)\n",
