@@ -24,26 +24,10 @@ strip_last_path_component(char *path) {
     else { path[0] = '.'; path[1] = '\0'; }     /* no slash → "." */
 }
 
-static int
-count_path_depth(const char *path) {
-    const char *p = path;
-    int depth = 0;
-    /* Skip leading slashes and "./" */
-    while(*p == '/') p++;
-    if(*p == '.' && (*(p+1) == '/' || !*(p+1))) { p++; if(*p == '/') p++; }
-    while(*p) {
-        if(*p == '/') { p++; continue; }
-        /* Skip "." components */
-        if(*p == '.' && (*(p+1) == '/' || !*(p+1))) { p++; continue; }
-        depth++;
-        while(*p && *p != '/') p++;
-    }
-    return depth;
-}
 
 int
 asn1c_set_common_dir(const char *name, const char *destdir) {
-    char dest[PATH_MAX], parent[PATH_MAX], grandparent[PATH_MAX];
+    char dest[PATH_MAX], parent[PATH_MAX];
 
     if(!name || !*name) name = "asn1c";
 
@@ -55,33 +39,24 @@ asn1c_set_common_dir(const char *name, const char *destdir) {
         while(len > 0 && dest[len - 1] == '/') dest[--len] = '\0';
     }
 
-    /* parent = dirname(dest), grandparent = dirname(parent) */
+    /* parent = dirname(dest); common dir is placed as a peer of dest */
     strncpy(parent, dest, sizeof(parent) - 1);
     strip_last_path_component(parent);
-    strncpy(grandparent, parent, sizeof(grandparent) - 1);
-    strip_last_path_component(grandparent);
 
-    /* Relative depth from grandparent to destdir (typically 2, or 1 for
-     * single-level destdir like "./ngap/" where parent == grandparent). */
-    int depth = count_path_depth(dest) - count_path_depth(grandparent);
-
-    /* common_dir = grandparent/name */
+    /* common_dir = parent/name  (sibling of destdir) */
     free(g_common_dir);
-    g_common_dir = malloc(strlen(grandparent) + 1 + strlen(name) + 1);
-    sprintf(g_common_dir, "%s/%s", grandparent, name);
+    g_common_dir = malloc(strlen(parent) + 1 + strlen(name) + 1);
+    sprintf(g_common_dir, "%s/%s", parent, name);
 
     /* makepath = common_dir + "/" */
     free(g_common_makepath);
     g_common_makepath = malloc(strlen(g_common_dir) + 2);
     sprintf(g_common_makepath, "%s/", g_common_dir);
 
-    /* include prefix = "../" × depth + name + "/" */
+    /* include prefix is always "../name/" — one level up from destdir */
     free(g_common_include_prefix);
-    g_common_include_prefix = malloc(depth * 3 + strlen(name) + 2);
-    g_common_include_prefix[0] = '\0';
-    for(int i = 0; i < depth; i++) strcat(g_common_include_prefix, "../");
-    strcat(g_common_include_prefix, name);
-    strcat(g_common_include_prefix, "/");
+    g_common_include_prefix = malloc(3 + strlen(name) + 2);
+    sprintf(g_common_include_prefix, "../%s/", name);
 
     /* Create common dir, or prompt user if it already exists */
     g_common_overwrite = 0;
