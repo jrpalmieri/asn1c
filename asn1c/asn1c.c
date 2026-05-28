@@ -63,6 +63,7 @@ main(int ac, char **av) {
     int warnings_as_errors = 0;     /* Treat warnings as errors */
     char *skeletons_dir = NULL;     /* Directory with supplementary stuff */
     char *destdir = NULL;           /* Destination for generated files */
+    char *common_dir_name = NULL;   /* -fcommon[=<name>] common directory name */
     char **debug_type_names = 0;    /* Debug stuff */
     size_t debug_type_names_count = 0;
     asn1p_t *asn = 0;               /* An ASN.1 parsed tree */
@@ -148,6 +149,16 @@ main(int ac, char **av) {
                 asn1_compiler_flags |= A1C_HAVE_NATIVE_64;
             } else if(strncmp(optarg, "prefix=", 7) == 0) {
                 asn1c_set_prefix(optarg + 7);
+            } else if(strcmp(optarg, "common") == 0) {
+                free(common_dir_name);
+                common_dir_name = strdup("asn1c");
+            } else if(strncmp(optarg, "common=", 7) == 0) {
+                free(common_dir_name);
+                common_dir_name = strdup(optarg + 7);
+                if(!common_dir_name || !*common_dir_name) {
+                    free(common_dir_name);
+                    common_dir_name = strdup("asn1c");
+                }
             } else {
                 fprintf(stderr, "-f%s: Invalid argument\n", optarg);
                 exit(EX_USAGE);
@@ -412,6 +423,19 @@ main(int ac, char **av) {
     if(debug_type_names) {
         asn1c_debug_type_naming(asn, asn1_compiler_flags, debug_type_names);
         return 0;
+    }
+
+    /*
+     * -fcommon[=<name>]: configure common skeleton directory.
+     */
+    if(common_dir_name) {
+        if(!destdir || !*destdir) {
+            fprintf(stderr, "-fcommon requires -D <destdir>\n");
+            exit(EX_USAGE);
+        }
+        asn1c_set_common_dir(common_dir_name, destdir);
+        free(common_dir_name);
+        common_dir_name = NULL;
     }
 
     /*

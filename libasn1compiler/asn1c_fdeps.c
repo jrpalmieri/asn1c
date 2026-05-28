@@ -53,6 +53,10 @@ asn1c_activate_dependency(asn1c_dep_chainset *deps, const char *data,
             memcpy(fname_scratch, start, end - start);
             fname_scratch[end-start] = '\0';
             fname = fname_scratch;
+            /* Strip any directory prefix (e.g. "../../asn1c/foo.h" → "foo.h")
+             * so that -fcommon relative paths still match dep chain basenames. */
+            const char *bn = strrchr(fname, '/');
+            if(bn) fname = bn + 1;
         } else {
             return;
         }

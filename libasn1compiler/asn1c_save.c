@@ -10,6 +10,113 @@
 #define symlink(a,b) (errno=ENOSYS, -1)
 #endif
 
+/* --- Common directory support for skeleton/support files --- */
+static char *g_common_dir = NULL;            /* Path to common dir for copying  */
+static char *g_common_include_prefix = NULL; /* Relative #include prefix, e.g. "../../asn1c/" */
+static char *g_common_makepath = NULL;       /* Common dir path for Makefile entries (trailing /) */
+
+static void
+strip_last_path_component(char *path) {
+    char *last = strrchr(path, '/');
+    if(last > path) { *last = '\0'; }
+    else if(last == path) { path[1] = '\0'; }   /* "/" → "/" */
+    else { path[0] = '.'; path[1] = '\0'; }     /* no slash → "." */
+}
+
+static int
+count_path_depth(const char *path) {
+    const char *p = path;
+    int depth = 0;
+    /* Skip leading slashes and "./" */
+    while(*p == '/') p++;
+    if(*p == '.' && (*(p+1) == '/' || !*(p+1))) { p++; if(*p == '/') p++; }
+    while(*p) {
+        if(*p == '/') { p++; continue; }
+        /* Skip "." components */
+        if(*p == '.' && (*(p+1) == '/' || !*(p+1))) { p++; continue; }
+        depth++;
+        while(*p && *p != '/') p++;
+    }
+    return depth;
+}
+
+void
+asn1c_set_common_dir(const char *name, const char *destdir) {
+    char dest[PATH_MAX], parent[PATH_MAX], grandparent[PATH_MAX];
+
+    if(!name || !*name) name = "asn1c";
+
+    /* Strip trailing slashes */
+    strncpy(dest, destdir, sizeof(dest) - 1);
+    dest[sizeof(dest) - 1] = '\0';
+    {
+        size_t len = strlen(dest);
+        while(len > 0 && dest[len - 1] == '/') dest[--len] = '\0';
+    }
+
+    /* parent = dirname(dest), grandparent = dirname(parent) */
+    strncpy(parent, dest, sizeof(parent) - 1);
+    strip_last_path_component(parent);
+    strncpy(grandparent, parent, sizeof(grandparent) - 1);
+    strip_last_path_component(grandparent);
+
+    /* Relative depth from grandparent to destdir (typically 2, or 1 for
+     * single-level destdir like "./ngap/" where parent == grandparent). */
+    int depth = count_path_depth(dest) - count_path_depth(grandparent);
+
+    /* common_dir = grandparent/name */
+    free(g_common_dir);
+    g_common_dir = malloc(strlen(grandparent) + 1 + strlen(name) + 1);
+    sprintf(g_common_dir, "%s/%s", grandparent, name);
+
+    /* makepath = common_dir + "/" */
+    free(g_common_makepath);
+    g_common_makepath = malloc(strlen(g_common_dir) + 2);
+    sprintf(g_common_makepath, "%s/", g_common_dir);
+
+    /* include prefix = "../" × depth + name + "/" */
+    free(g_common_include_prefix);
+    g_common_include_prefix = malloc(depth * 3 + strlen(name) + 2);
+    g_common_include_prefix[0] = '\0';
+    for(int i = 0; i < depth; i++) strcat(g_common_include_prefix, "../");
+    strcat(g_common_include_prefix, name);
+    strcat(g_common_include_prefix, "/");
+
+    /* Create common dir */
+    if(mkdir(g_common_dir, 0755) < 0 && errno != EEXIST) {
+        fprintf(stderr, "WARNING: Cannot create common directory %s: %s\n",
+            g_common_dir, strerror(errno));
+    }
+
+    fprintf(stderr, "Common files directory: %s (include prefix: \"%s\")\n",
+        g_common_dir, g_common_include_prefix);
+}
+
+const char *
+asn1c_get_common_include_prefix(void) {
+    return g_common_include_prefix;
+}
+
+const char *
+asn1c_skeleton_include_str(const char *name, int quoted) {
+    static char _skel_buf[PATH_MAX + 64];
+    static char _name_buf[256];
+    /* Sanitize: replace spaces with underscores (matches asn1c_make_identifier) */
+    strncpy(_name_buf, name, sizeof(_name_buf) - 1);
+    _name_buf[sizeof(_name_buf) - 1] = '\0';
+    for(char *p = _name_buf; *p; p++) if(*p == ' ') *p = '_';
+    if(g_common_include_prefix) {
+        snprintf(_skel_buf, sizeof(_skel_buf), "\"%s%s.h\"",
+                 g_common_include_prefix, _name_buf);
+    } else if(quoted) {
+        snprintf(_skel_buf, sizeof(_skel_buf), "\"%s.h\"", _name_buf);
+    } else {
+        snprintf(_skel_buf, sizeof(_skel_buf), "<%s.h>", _name_buf);
+    }
+    return _skel_buf;
+}
+/* --- End common directory support --- */
+
 /* Pedantically check fprintf's return value. */
 static int safe_fprintf(FILE *fp, const char *fmt, ...) {
     va_list ap;
@@ -28,9 +135,12 @@ static size_t safe_fwrite(const void *ptr, size_t size, size_t nitems, FILE *str
 }
 
 #define	HINCLUDE(s)						\
-	((arg->flags & A1C_INCLUDES_QUOTED)			\
-		? safe_fprintf(fp_h, "#include \"%s\"\n", s)		\
-		: safe_fprintf(fp_h, "#include <%s>\n", s))		\
+	(g_common_include_prefix				\
+		? safe_fprintf(fp_h, "#include \"%s%s\"\n",		\
+			g_common_include_prefix, s)			\
+		: ((arg->flags & A1C_INCLUDES_QUOTED)			\
+			? safe_fprintf(fp_h, "#include \"%s\"\n", s)	\
+			: safe_fprintf(fp_h, "#include <%s>\n", s)))	\
 
 enum include_type_result {
     TI_NOT_INCLUDED,
@@ -122,7 +232,8 @@ asn1c__save_library_makefile(arg_t *arg, const asn1c_dep_chainset *deps,
 				where[0] = '\0';
 			}
 
-            if(asn1c_copy_over(arg, destdir, dstpath, where) == -1) {
+            const char *skel_dest = g_common_makepath ? g_common_makepath : destdir;
+            if(asn1c_copy_over(arg, skel_dest, dstpath, where) == -1) {
                 safe_fprintf(mkf, ">>>ABORTED<<<");
 				fclose(mkf);
 				return -1;
@@ -135,7 +246,7 @@ asn1c__save_library_makefile(arg_t *arg, const asn1c_dep_chainset *deps,
 			} else {
 				what_kind = "SRCS";
 			}
-            safe_fprintf(mkf, "ASN_MODULE_%s+=%s%s\n", what_kind, destdir,
+            safe_fprintf(mkf, "ASN_MODULE_%s+=%s%s\n", what_kind, skel_dest,
                          fname);
         }
 
@@ -149,15 +260,27 @@ asn1c__save_library_makefile(arg_t *arg, const asn1c_dep_chainset *deps,
 		(arg->flags & A1C_GEN_OER) ? "" : "-DASN_DISABLE_OER_SUPPORT ",
 		(arg->flags & A1C_GEN_PER) ? "" : "-DASN_DISABLE_PER_SUPPORT ");
 
-	safe_fprintf(
-		mkf,
-		"\n\n"
-		"lib_LTLIBRARIES+=libasncodec.la\n"
-		"libasncodec_la_SOURCES="
-		"$(ASN_MODULE_SRCS) $(ASN_MODULE_HDRS)\n"
-		"libasncodec_la_CPPFLAGS=-I$(top_srcdir)/%s\n"
-		"libasncodec_la_CFLAGS=$(ASN_MODULE_CFLAGS)\n"
-		"libasncodec_la_LDFLAGS=-lm\n", destdir);
+    if(g_common_dir) {
+        safe_fprintf(
+            mkf,
+            "\n\n"
+            "lib_LTLIBRARIES+=libasncodec.la\n"
+            "libasncodec_la_SOURCES="
+            "$(ASN_MODULE_SRCS) $(ASN_MODULE_HDRS)\n"
+            "libasncodec_la_CPPFLAGS=-I$(top_srcdir)/%s -I$(top_srcdir)/%s\n"
+            "libasncodec_la_CFLAGS=$(ASN_MODULE_CFLAGS)\n"
+            "libasncodec_la_LDFLAGS=-lm\n", destdir, g_common_dir);
+    } else {
+        safe_fprintf(
+            mkf,
+            "\n\n"
+            "lib_LTLIBRARIES+=libasncodec.la\n"
+            "libasncodec_la_SOURCES="
+            "$(ASN_MODULE_SRCS) $(ASN_MODULE_HDRS)\n"
+            "libasncodec_la_CPPFLAGS=-I$(top_srcdir)/%s\n"
+            "libasncodec_la_CFLAGS=$(ASN_MODULE_CFLAGS)\n"
+            "libasncodec_la_LDFLAGS=-lm\n", destdir);
+    }
 	fclose(mkf);
     safe_fprintf(stderr, "Generated %s%s\n", destdir, makefile_name);
 

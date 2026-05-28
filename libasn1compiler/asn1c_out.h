@@ -95,12 +95,9 @@ int asn1c_compiled_output(arg_t *arg, const char *file, int lineno,
 	} while(0)
 
 /* Generate #include line */
-#define	GEN_INCLUDE_STD(typename)	do {			\
-	if((arg->flags & A1C_INCLUDES_QUOTED)) {			\
-		GEN_INCLUDE("\"" typename ".h\"");		\
-	} else {						\
-		GEN_INCLUDE("<" typename ".h>");		\
-	} } while(0)
+#define	GEN_INCLUDE_STD(typename)	\
+	GEN_INCLUDE(asn1c_skeleton_include_str(typename,	\
+		(arg->flags & A1C_INCLUDES_QUOTED)))
 #define	GEN_INCLUDE(filename)	do {				\
 	int saved_target = arg->target->target;			\
 	if(!filename) break;					\

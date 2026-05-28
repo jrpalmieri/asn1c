@@ -121,4 +121,13 @@ void asn1c__add_pdu_type(const char *typename);
  */
 void asn1c_set_prefix(const char *prefix);
 
+/*
+ * Configure a common directory for skeleton/support files.
+ * name:    subdirectory name (e.g. "asn1c"); defaults to "asn1c" if NULL/empty.
+ * destdir: the -D output directory (must be set).
+ * The common dir is placed as a sibling of destdir's parent.
+ * Must be called before asn1_compile().
+ */
+void asn1c_set_common_dir(const char *name, const char *destdir);
+
 #endif	/* ASN1_COMPILER_H */

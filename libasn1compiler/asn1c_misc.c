@@ -360,6 +360,12 @@ asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format) {
 		/* For user-defined types the include file name carries the prefix. */
 		const char *id = exprid ? exprid->Identifier : typename;
 		if(!stdname) id = prefix_for_type(id);
+		const char *cpfx = asn1c_get_common_include_prefix();
+		if(stdname && cpfx) {
+			/* Skeleton file: build relative-path include via snprintf to
+			 * avoid asn1c_make_identifier collapsing the "../" sequences. */
+			return asn1c_skeleton_include_str(id, 0);
+		}
 		return asn1c_make_identifier(
 			AMI_MASK_ONLY_SPACES | AMI_NODELIMITER,
 			0, ((!stdname || (arg->flags & A1C_INCLUDES_QUOTED))
