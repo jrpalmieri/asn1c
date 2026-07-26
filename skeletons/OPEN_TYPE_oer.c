@@ -30,7 +30,12 @@ OPEN_TYPE_oer_get(const asn_codec_ctx_t *opt_codec_ctx,
     }
 
     selected = elm->type_selector(td, sptr);
-    if(!selected.presence_index) {
+    if(!selected.presence_index || !selected.type_descriptor) {
+        /*
+         * The constraining value does not select any type, or selects a
+         * row of the information object set which does not define a type
+         * for this open type field. Either way, there's nothing to decode.
+         */
         ASN__DECODE_FAILED;
     }
 
@@ -77,8 +82,7 @@ OPEN_TYPE_oer_get(const asn_codec_ctx_t *opt_codec_ctx,
     }
 
     if(*memb_ptr2) {
-        const asn_CHOICE_specifics_t *specs =
-            selected.type_descriptor->specifics;
+        const asn_CHOICE_specifics_t *specs = elm->type->specifics;
         if(elm->flags & ATF_POINTER) {
             ASN_STRUCT_FREE(*selected.type_descriptor, inner_value);
             *memb_ptr2 = NULL;

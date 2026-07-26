@@ -61,6 +61,12 @@ TESTS += check-src/check-73.c
 TESTS += check-src/check-92.-findirect-choice.c
 TESTS += check-src/check-92.c
 TESTS += check-src/check-158.-fcompound-names.c
+TESTS += check-src/check-159.c
+TESTS += check-src/check-160.-gen-PER.c
+TESTS += check-src/check-161.-fcompound-names.c
+TESTS += check-src/check-161.-fcompound-names.-gen-PER.c
+TESTS += check-src/check-162.c
+TESTS += check-src/check-164.-fcompound-names.c
 
 if TEST_64BIT
 TESTS += check-src/check64-134.-gen-PER.c
@@ -75,6 +81,7 @@ EXTRA_DIST =    \
     data-70     \
     data-119    \
     data-126    \
+    data-159    \
     check-src/check64-134.-gen-PER.c    \
     check-src/check64-136.-gen-OER.c
 
