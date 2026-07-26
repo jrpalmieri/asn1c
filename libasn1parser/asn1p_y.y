@@ -629,36 +629,6 @@ Assignment:
 		asn1p_module_member_add($$, $1);
 	}
 	/*
-	 * Information Object Set definition using WITH SYNTAX notation.
-	 * === EXAMPLE ===
-	 * HandoverRequest-IEs XNAP-PROTOCOL-IES ::= {
-	 *     { ID id-X CRITICALITY reject TYPE T PRESENCE mandatory } | ...
-	 * }
-	 * === EOF ===
-	 * The RHS is captured opaquely for later fixer processing.
-	 */
-	| TypeRefName TOK_capitalreference TOK_PPEQ
-		'{' { asn1p_lexer_hack_push_opaque_state(); } Opaque /* '}' */ {
-		$$ = asn1p_module_new();
-		checkmem($$);
-		asn1p_expr_t *expr = NEW_EXPR();
-		checkmem(expr);
-		expr->Identifier = $1;
-		expr->reference = asn1p_ref_new(yylineno, currentModule);
-		checkmem(expr->reference);
-		asn1p_ref_add_component(expr->reference, $2, RLT_CAPITALS);
-		free($2);
-		expr->meta_type = AMT_VALUESET;
-		expr->expr_type = A1TC_REFERENCE;
-		expr->constraints = asn1p_constraint_new(yylineno, currentModule);
-		checkmem(expr->constraints);
-		expr->constraints->type = ACT_EL_VALUE;
-		expr->constraints->value = asn1p_value_frombuf($6.buf, $6.len, 0);
-		checkmem(expr->constraints->value);
-		expr->constraints->value->type = ATV_UNPARSED;
-		asn1p_module_member_add($$, expr);
-	}
-	/*
 	 * Value set definition
 	 * === EXAMPLE ===
 	 * EvenNumbers INTEGER ::= { 2 | 4 | 6 | 8 }
