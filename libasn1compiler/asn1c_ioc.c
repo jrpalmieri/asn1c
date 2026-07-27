@@ -149,6 +149,40 @@ emit_ioc_value(arg_t *arg, struct asn1p_ioc_cell_s *cell) {
             return -1;
         }
         }
+        /*
+         * The same value may be referenced by several Information Object
+         * Sets emitted into one output file -- 3GPP object sets all carry
+         * rows like PRESENCE mandatory -- and asn_VAL_* is named after the
+         * value, not the set, so each set would re-emit an identical
+         * file-scope definition and the file would not compile. The repeats
+         * are byte-identical by construction (same name implies the same
+         * value expression), so emit each one only once per file.
+         */
+        {
+            char symbuf[256];
+            size_t n;
+            snprintf(symbuf, sizeof(symbuf), "asn_VAL_%d_%s",
+                     cell->value->_type_unique_index, MKID(cell->value));
+            for(n = 0; n < arg->target->emitted_values_count; n++) {
+                if(strcmp(arg->target->emitted_values[n], symbuf) == 0)
+                    return 0;   /* Already defined in this file */
+            }
+            {
+                char **tmp = realloc(
+                    arg->target->emitted_values,
+                    (arg->target->emitted_values_count + 1) * sizeof(*tmp));
+                char *sym = strdup(symbuf);
+                if(!tmp || !sym) {
+                    free(tmp ? sym : NULL);
+                    FATAL("Out of memory recording %s", symbuf);
+                    return -1;
+                }
+                arg->target->emitted_values = tmp;
+                arg->target->emitted_values[arg->target->emitted_values_count++]
+                    = sym;
+            }
+        }
+
         OUT("static const %s asn_VAL_%d_%s = ", prim_type,
             cell->value->_type_unique_index, MKID(cell->value));
 
@@ -226,7 +260,23 @@ emit_ioc_cell(arg_t *arg, struct asn1p_ioc_cell_s *cell) {
         GEN_INCLUDE(asn1c_type_name(arg, cell->value, TNF_INCLUDE));
         OUT("aioc__type, &asn_DEF_%s", MKID(cell->value));
     } else {
-        return -1;
+        /*
+         * The cell carries something we cannot render as either a value or
+         * a type reference -- typically a field whose assignment was skipped
+         * because it could not be resolved (see asn1fix_cws.c). Emit an
+         * empty cell, exactly as for a cell with no value at all: the
+         * decoders already treat a row with no type descriptor as "selects
+         * nothing", i.e. a decode failure, rather than dereferencing it.
+         *
+         * Returning early here instead would leave the half-written
+         * initializer above unterminated and produce C that does not parse.
+         *
+         * The underlying unresolved reference is already reported by the
+         * fixer, so note this only under -Wdebug-compiler.
+         */
+        DEBUG("Information Object Set cell %s at line %d has no usable "
+              "value; emitting an empty cell",
+              cell->field->Identifier, cell->field->_lineno);
     }
 
     OUT(" }");
@@ -271,7 +321,9 @@ emit_ioc_table(arg_t *arg, asn1p_expr_t *context, asn1c_ioc_table_and_objset_t i
         }
         for(size_t cn = 0; cn < row->columns; cn++) {
             if(rn || cn) OUT(",\n");
-            emit_ioc_cell(arg, &row->column[cn]);
+            if(emit_ioc_cell(arg, &row->column[cn])) {
+                return -1;
+            }
         }
     }
     OUT("\n");

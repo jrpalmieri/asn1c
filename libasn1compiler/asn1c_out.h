@@ -34,6 +34,17 @@ typedef struct compiler_streams {
 		int indent_level;
 		int indented;
 	} destination[OT_MAX];
+
+	/*
+	 * Names of the asn_VAL_* constants already emitted into OT_IOC_TABLES
+	 * for this output file. Several Information Object Sets in one file
+	 * routinely share values (every 3GPP object set has a PRESENCE
+	 * mandatory row, say), and each would otherwise re-emit an identical
+	 * file-scope definition. Scope is per output file, which is exactly
+	 * the lifetime of this structure.
+	 */
+	char **emitted_values;
+	size_t emitted_values_count;
 } compiler_streams_t;
 
 static char *_compiler_stream2str[] __attribute__ ((unused))

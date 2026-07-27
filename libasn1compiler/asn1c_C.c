@@ -957,6 +957,25 @@ asn1c_lang_C_type_CHOICE(arg_t *arg) {
 	OUT("typedef %s {\n", c_name(arg).presence_enum);
 	INDENTED(
 		int skipComma = 1;
+		/*
+		 * Enumerator names emitted so far, to keep them unique.
+		 *
+		 * An information object set may map several distinct object
+		 * identifiers onto the same open type -- 3GPP NGAP/XnAP do this
+		 * routinely, e.g. three NGAP IE ids all carrying TYPE
+		 * NRUESidelinkAggregateMaximumBitrate. Those become several CHOICE
+		 * alternatives sharing one type name, and hence one enumerator name.
+		 *
+		 * The union collapses such alternatives (TM_SKIPinUNION), but this
+		 * list must keep one entry per alternative: the decoder reports
+		 * presence_index by counting alternatives, and asn_MBR_* likewise
+		 * holds one member per alternative (all pointing at the shared union
+		 * field). Dropping a repeat here would renumber every later
+		 * enumerator and silently misidentify decoded values. So make the
+		 * repeats unique instead of dropping them.
+		 */
+		char **seen = NULL;
+		size_t seen_count = 0;
         OUT("%s,\t/* No components present */\n", c_presence_name(arg, 0));
 		TQ_FOR(v, &(expr->members), next) {
 			if(skipComma) skipComma = 0;
@@ -967,7 +986,39 @@ asn1c_lang_C_type_CHOICE(arg_t *arg) {
 				skipComma = 1;
 				continue;
 			}
-            OUT("%s", c_presence_name(arg, v));
+			{
+				/* c_presence_name() returns a static buffer; copy it. */
+				char *base = strdup(c_presence_name(arg, v));
+				size_t namesz;
+				char *name;
+				char **tmp;
+				int suffix = 1;
+				assert(base);
+				namesz = strlen(base) + sizeof("_2147483647");
+				name = malloc(namesz);
+				assert(name);
+				memcpy(name, base, strlen(base) + 1);
+				for(;;) {
+					size_t i;
+					int taken = 0;
+					for(i = 0; i < seen_count; i++) {
+						if(strcmp(seen[i], name) == 0) { taken = 1; break; }
+					}
+					if(!taken) break;
+					snprintf(name, namesz, "%s_%d", base, ++suffix);
+				}
+				free(base);
+				tmp = realloc(seen, (seen_count + 1) * sizeof(*seen));
+				assert(tmp);
+				seen = tmp;
+				seen[seen_count++] = name;
+				OUT("%s", name);
+			}
+		}
+		{
+			size_t i;
+			for(i = 0; i < seen_count; i++) free(seen[i]);
+			free(seen);
 		}
 		OUT("\n");
 	);
@@ -2080,6 +2131,63 @@ emit_single_member_PER_constraint(arg_t *arg, asn1cnst_range_t *range, int alpha
 	return 0;
 }
 
+/*
+ * Whether emit_member_{OER,PER}_constraints() can describe this expression's
+ * constraint shape, and so will emit a descriptor for it.
+ *
+ * NB: these describe the emitter's own condition only. The emitter serves
+ * both the "type" prefix (from emit_type_DEF) and the "memb" prefix (from
+ * emit_member_table), so they must not fold in either caller's extra gating.
+ */
+static int
+OER_constraints_shape_emitted(arg_t *arg, asn1p_expr_t *expr) {
+    asn1p_expr_type_e etype = expr_get_type(arg, expr);
+
+    return (arg->flags & A1C_GEN_OER)
+           && (expr->combined_constraints || etype == ASN_BASIC_ENUMERATED
+               || etype == ASN_CONSTR_CHOICE);
+}
+
+static int
+PER_constraints_shape_emitted(arg_t *arg, asn1p_expr_t *expr) {
+    asn1p_expr_type_e etype = expr_get_type(arg, expr);
+
+    return (arg->flags & A1C_GEN_PER)
+           && (expr->combined_constraints || etype == ASN_BASIC_ENUMERATED
+               || etype == ASN_CONSTR_CHOICE
+               || (etype & ASN_STRING_KM_MASK));
+}
+
+/*
+ * Whether an "asn_{OER,PER}_memb_<name>_constr_<n>" descriptor is actually
+ * defined, and may therefore be referenced from the member table.
+ *
+ * Two gates have to agree. emit_member_table() emits member constraint
+ * definitions only when the member carries constraints and -fno-constraints
+ * is off; the emitter then describes only the shapes above. A member can pass
+ * the first gate and fail the second -- OCTET STRING (CONTAINING SomeType) is
+ * the common case, carrying a constraint that yields no combined_constraints
+ * -- and referencing a descriptor that was consequently never emitted yields
+ * C that does not compile. emit_type_DEF() already keeps the analogous
+ * type-level reference in step; these keep the member-level ones in step.
+ */
+static int
+member_constraints_defined(arg_t *arg, asn1p_expr_t *expr) {
+    return expr->constraints && !(arg->flags & A1C_NO_CONSTRAINTS);
+}
+
+static int
+member_OER_constraints_emitted(arg_t *arg, asn1p_expr_t *expr) {
+    return member_constraints_defined(arg, expr)
+           && OER_constraints_shape_emitted(arg, expr);
+}
+
+static int
+member_PER_constraints_emitted(arg_t *arg, asn1p_expr_t *expr) {
+    return member_constraints_defined(arg, expr)
+           && PER_constraints_shape_emitted(arg, expr);
+}
+
 static int
 emit_member_OER_constraints(arg_t *arg, asn1p_expr_t *expr, const char *pfx) {
     int save_target = arg->target->target;
@@ -2088,9 +2196,7 @@ emit_member_OER_constraints(arg_t *arg, asn1p_expr_t *expr, const char *pfx) {
 
     etype = expr_get_type(arg, expr);
 
-    if((arg->flags & A1C_GEN_OER)
-       && (expr->combined_constraints || etype == ASN_BASIC_ENUMERATED
-           || etype == ASN_CONSTR_CHOICE)) {
+    if(OER_constraints_shape_emitted(arg, expr)) {
         /* Fall through */
     } else {
         return 0;
@@ -2143,13 +2249,7 @@ emit_member_PER_constraints(arg_t *arg, asn1p_expr_t *expr, const char *pfx) {
 
 	etype = expr_get_type(arg, expr);
 
-	if((arg->flags & A1C_GEN_PER)
-	&& (expr->combined_constraints
-		|| etype == ASN_BASIC_ENUMERATED
-		|| etype == ASN_CONSTR_CHOICE
-		|| (etype & ASN_STRING_KM_MASK)
-        )
-	) {
+	if(PER_constraints_shape_emitted(arg, expr)) {
 		/* Fall through */
 	} else {
 		return 0;
@@ -2844,27 +2944,19 @@ emit_member_table(arg_t *arg, asn1p_expr_t *expr, asn1c_ioc_table_and_objset_t *
 
     OUT("{ ");
 	if(C99_MODE) OUT(".oer_constraints = ");
-	if(arg->flags & A1C_GEN_OER) {
-		if(expr->constraints) {
-			OUT("&asn_OER_memb_%s_constr_%d",
-				MKID(expr),
-				expr->_type_unique_index);
-		} else {
-			OUT("0");
-		}
+	if(member_OER_constraints_emitted(arg, expr)) {
+		OUT("&asn_OER_memb_%s_constr_%d",
+			MKID(expr),
+			expr->_type_unique_index);
 	} else {
-        OUT("0");
+		OUT("0");
 	}
     OUT(", ");
 	if(C99_MODE) OUT(".per_constraints = ");
-	if(arg->flags & A1C_GEN_PER) {
-		if(expr->constraints) {
-			OUT("&asn_PER_memb_%s_constr_%d",
-				MKID(expr),
-				expr->_type_unique_index);
-		} else {
-			OUT("0");
-		}
+	if(member_PER_constraints_emitted(arg, expr)) {
+		OUT("&asn_PER_memb_%s_constr_%d",
+			MKID(expr),
+			expr->_type_unique_index);
 	} else {
 		OUT("0");
 	}

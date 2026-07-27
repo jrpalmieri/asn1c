@@ -208,6 +208,12 @@ asn1c_detach_streams(asn1p_expr_t *expr) {
 			free(m);
 		}
 	}
+	{
+		size_t n;
+		for(n = 0; n < cs->emitted_values_count; n++)
+			free(cs->emitted_values[n]);
+		free(cs->emitted_values);
+	}
 	free(expr->data);
 	expr->data = (void *)NULL;
 
