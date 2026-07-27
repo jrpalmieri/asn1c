@@ -24,8 +24,8 @@ typedef struct asn_per_constraint_s {
 	} flags;
 	int  range_bits;		/* Full number of bits in the range */
 	int  effective_bits;		/* Effective bits */
-	long lower_bound;		/* "lb" value */
-	long upper_bound;		/* "ub" value */
+	long long lower_bound;		/* "lb" value */
+	long long upper_bound;		/* "ub" value */
 } asn_per_constraint_t;
 typedef struct asn_per_constraints_s {
 	asn_per_constraint_t value;
@@ -104,6 +104,18 @@ int uper_put_nslength(asn_per_outp_t *po, size_t length);
  * Put the normally small non-negative whole number.
  */
 int uper_put_nsnnwn(asn_per_outp_t *po, int n);
+
+/* --- Aligned PER (APER) support --- */
+ssize_t aper_get_length(asn_per_data_t *pd, int range,
+                        int effective_bound_bits, int *repeat);
+ssize_t aper_get_nslength(asn_per_data_t *pd);
+ssize_t aper_get_nsnnwn(asn_per_data_t *pd, int range);
+ssize_t aper_put_length(asn_per_outp_t *po, int range, size_t length);
+/* Align the current bit position to an octet boundary */
+int aper_put_align(asn_per_outp_t *po);
+int32_t aper_get_align(asn_per_data_t *pd);
+int aper_put_nslength(asn_per_outp_t *po, size_t length);
+int aper_put_nsnnwn(asn_per_outp_t *po, int range, int number);
 
 #ifdef __cplusplus
 }

@@ -59,6 +59,10 @@ per_type_encoder_f SEQUENCE_encode_uper;
 asn_random_fill_f  SEQUENCE_random_fill;
 extern asn_TYPE_operation_t asn_OP_SEQUENCE;
 
+/* --- Aligned PER (APER) support --- */
+per_type_decoder_f SEQUENCE_decode_aper;
+per_type_encoder_f SEQUENCE_encode_aper;
+
 #ifdef __cplusplus
 }
 #endif

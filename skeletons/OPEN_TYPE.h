@@ -56,6 +56,18 @@ asn_enc_rval_t OPEN_TYPE_encode_uper(
     const asn_per_constraints_t *constraints, const void *struct_ptr,
     asn_per_outp_t *per_output);
 
+/* --- Aligned PER (APER) support --- */
+#define OPEN_TYPE_decode_aper NULL
+asn_dec_rval_t OPEN_TYPE_aper_get(const asn_codec_ctx_t *opt_codec_ctx,
+                                  const asn_TYPE_descriptor_t *parent_type,
+                                  void *parent_structure,
+                                  const asn_TYPE_member_t *element,
+                                  asn_per_data_t *pd);
+asn_enc_rval_t OPEN_TYPE_encode_aper(
+    const asn_TYPE_descriptor_t *type_descriptor,
+    const asn_per_constraints_t *constraints, const void *struct_ptr,
+    asn_per_outp_t *per_output);
+
 #ifdef __cplusplus
 }
 #endif

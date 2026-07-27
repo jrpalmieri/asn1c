@@ -37,6 +37,10 @@ asn_random_fill_f  NativeInteger_random_fill;
 
 #define NativeInteger_constraint  asn_generic_no_constraint
 
+/* --- Aligned PER (APER) support --- */
+per_type_decoder_f NativeInteger_decode_aper;
+per_type_encoder_f NativeInteger_encode_aper;
+
 #ifdef __cplusplus
 }
 #endif

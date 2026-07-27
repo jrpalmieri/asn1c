@@ -97,6 +97,12 @@ enum asn_strtox_result_e asn_strtoumax_lim(const char *str, const char **end,
 const asn_INTEGER_enum_map_t *INTEGER_map_value2enum(
     const asn_INTEGER_specifics_t *specs, long value);
 
+/* --- Aligned PER (APER) support --- */
+per_type_decoder_f INTEGER_decode_aper;
+per_type_encoder_f INTEGER_encode_aper;
+int asn_int642INTEGER(INTEGER_t *i, int64_t l);
+int asn_uint642INTEGER(INTEGER_t *i, uint64_t l);
+
 #ifdef __cplusplus
 }
 #endif

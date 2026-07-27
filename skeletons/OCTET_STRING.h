@@ -93,6 +93,10 @@ size_t OCTET_STRING_random_length_constrained(
     const asn_TYPE_descriptor_t *, const asn_encoding_constraints_t *,
     size_t max_length);
 
+/* --- Aligned PER (APER) support --- */
+per_type_decoder_f OCTET_STRING_decode_aper;
+per_type_encoder_f OCTET_STRING_encode_aper;
+
 #ifdef __cplusplus
 }
 #endif

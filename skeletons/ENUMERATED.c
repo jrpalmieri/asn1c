@@ -32,9 +32,13 @@ asn_TYPE_operation_t asn_OP_ENUMERATED = {
 #ifdef	ASN_DISABLE_PER_SUPPORT
 	0,
 	0,
+	0,
+	0,
 #else
 	ENUMERATED_decode_uper,	/* Unaligned PER decoder */
 	ENUMERATED_encode_uper,	/* Unaligned PER encoder */
+	0,	/* No APER decoder */
+	0,	/* No APER encoder */
 #endif	/* ASN_DISABLE_PER_SUPPORT */
 	ENUMERATED_random_fill,
 	0	/* Use generic outmost tag fetcher */

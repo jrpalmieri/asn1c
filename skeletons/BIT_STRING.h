@@ -39,6 +39,10 @@ asn_random_fill_f  BIT_STRING_random_fill;
 #define BIT_STRING_encode_der        OCTET_STRING_encode_der
 #define BIT_STRING_decode_xer        OCTET_STRING_decode_xer_binary
 
+/* --- Aligned PER (APER) support --- */
+#define BIT_STRING_decode_aper       OCTET_STRING_decode_aper
+#define BIT_STRING_encode_aper       OCTET_STRING_encode_aper
+
 #ifdef __cplusplus
 }
 #endif

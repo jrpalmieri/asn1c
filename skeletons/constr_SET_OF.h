@@ -40,6 +40,10 @@ per_type_encoder_f SET_OF_encode_uper;
 asn_random_fill_f  SET_OF_random_fill;
 extern asn_TYPE_operation_t asn_OP_SET_OF;
 
+/* --- Aligned PER (APER) support --- */
+per_type_decoder_f SET_OF_decode_aper;
+per_type_encoder_f SET_OF_encode_aper;
+
 #ifdef __cplusplus
 }
 #endif

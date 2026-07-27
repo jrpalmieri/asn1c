@@ -58,9 +58,13 @@ asn_TYPE_operation_t asn_OP_NativeReal = {
 #ifdef	ASN_DISABLE_PER_SUPPORT
 	0,
 	0,
+	0,
+	0,
 #else
 	NativeReal_decode_uper,
 	NativeReal_encode_uper,
+	0,	/* No APER decoder */
+	0,	/* No APER encoder */
 #endif	/* ASN_DISABLE_PER_SUPPORT */
 	NativeReal_random_fill,
 	0	/* Use generic outmost tag fetcher */

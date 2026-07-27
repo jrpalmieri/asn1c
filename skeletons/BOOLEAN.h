@@ -36,6 +36,10 @@ asn_random_fill_f  BOOLEAN_random_fill;
 
 #define BOOLEAN_constraint     asn_generic_no_constraint
 
+/* --- Aligned PER (APER) support --- */
+per_type_decoder_f BOOLEAN_decode_aper;
+per_type_encoder_f BOOLEAN_encode_aper;
+
 #ifdef __cplusplus
 }
 #endif

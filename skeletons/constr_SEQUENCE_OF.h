@@ -32,6 +32,10 @@ extern asn_TYPE_operation_t asn_OP_SEQUENCE_OF;
 #define	SEQUENCE_OF_encode_oer  SET_OF_encode_oer
 #define	SEQUENCE_OF_random_fill SET_OF_random_fill
 
+/* --- Aligned PER (APER) support --- */
+per_type_encoder_f SEQUENCE_OF_encode_aper;
+#define	SEQUENCE_OF_decode_aper	SET_OF_decode_aper
+
 #ifdef __cplusplus
 }
 #endif

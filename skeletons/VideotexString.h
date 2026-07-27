@@ -27,6 +27,8 @@ extern asn_TYPE_operation_t asn_OP_VideotexString;
 #define VideotexString_decode_uper  OCTET_STRING_decode_uper
 #define VideotexString_encode_uper  OCTET_STRING_encode_uper
 
+#define VideotexString_decode_aper	OCTET_STRING_decode_aper
+#define VideotexString_encode_aper	OCTET_STRING_encode_aper
 #ifdef __cplusplus
 }
 #endif
