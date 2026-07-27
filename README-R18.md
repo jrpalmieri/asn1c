@@ -18,7 +18,7 @@ convention for compiler flags.
 | ------ | ------ |
 | `-fcommon` | Write skeleton/support files to a shared directory named `asn1c` instead of into the `-D` output directory. Requires `-D`. |
 | `-fcommon=<name>` | As above, using `<name>` for the directory. An empty `<name>` falls back to `asn1c`. |
-| `-fprefix=<prefix>` | Prepend `<prefix>` to generated **output file names** and their include guards. |
+| `-fprefix=<prefix>` | Prepend `<prefix>` to generated **output file names**, their include guards, and the **C identifiers** — so several specifications can be linked into one binary. |
 | `-fhave_native64` | Accepted and parsed, but **currently has no effect** — see [Known limitations](#known-limitations). |
 
 `asn1c -h` lists all three, along with every other option the compiler accepts.
@@ -85,13 +85,39 @@ ASN_RRC_T.c  ASN_RRC_T.h  ...
 The include guard is prefixed to match (`_ASN_RRC_T_H_`). Skeleton runtime files
 are **not** prefixed — they are shared, standard files.
 
-> **Scope — read this before relying on it.** `-fprefix` renames files and include
-> guards **only**. C identifiers are left untouched: the type above is still
-> `T_t`, and its descriptor is still `asn_DEF_T`. The option therefore prevents
-> *filename* collisions but **not** *symbol* collisions, so it does not by itself
-> let you link two specifications that define the same type name into one binary.
-> The built-in `--help` text claims it also prefixes "generated struct/type names";
-> that text is inaccurate.
+**C identifiers are prefixed too**, which is what lets several specifications be
+linked into one binary. The type above is `ASN_RRC_T_t`, its descriptor is
+`asn_DEF_ASN_RRC_T`, and the same applies to `asn_MBR_*`, `asn_SPC_*`,
+`asn_PER_*`, the per-type codec functions, `_PR` enumerators and `e_*` value
+enumerations:
+
+```c
+typedef enum ASN_RRC_MyChoice_PR {
+    ASN_RRC_MyChoice_PR_NOTHING,
+    ASN_RRC_MyChoice_PR_a,
+} ASN_RRC_MyChoice_PR;
+
+typedef struct ASN_RRC_MyChoice {
+    ASN_RRC_MyChoice_PR present;
+    union ASN_RRC_MyChoice_u {
+        ASN_RRC_MyInt_t  a;      /* prefixed: a user type */
+        OCTET_STRING_t   b;      /* not prefixed: a skeleton type */
+    } choice;
+    asn_struct_ctx_t _asn_ctx;
+} ASN_RRC_MyChoice_t;
+
+extern asn_TYPE_descriptor_t asn_DEF_ASN_RRC_MyChoice;
+```
+
+Two things deliberately keep their unprefixed names:
+
+- **Structure member names.** A member is scoped to its structure, and its name
+  has to match between the declaration and every `offsetof()` that refers to it.
+- **The skeleton runtime.** `OCTET_STRING_t`, `asn_DEF_NativeInteger`,
+  `asn_OP_SEQUENCE` and friends are one shared copy by design.
+
+The ASN.1 names carried in descriptors for diagnostics (`"MyChoice"`) are also
+left alone, so decoder output and XER remain unchanged.
 
 ### `-fhave_native64`
 
@@ -279,6 +305,33 @@ second, so the reference named a descriptor that was never emitted.
 
 ---
 
+## Aligned PER (APER)
+
+The skeletons implement **aligned** PER alongside upstream's unaligned PER, which
+3GPP needs: NGAP and XnAP are APER on the wire, RRC is UPER.
+
+- `aper_encode()`, `aper_encode_to_buffer()`, `aper_encode_to_new_buffer()`,
+  `aper_decode()`, `aper_decode_complete()` mirror their `uper_*` counterparts.
+- `asn_TYPE_operation_t` carries `aper_decoder` / `aper_encoder` after the `uper`
+  pair, and `asn_encode()` / `asn_decode()` accept `ATS_ALIGNED_BASIC_PER` and
+  `ATS_ALIGNED_CANONICAL_PER`.
+- No generator change is involved. Generated code references the `asn_OP_*`
+  tables, so a module compiled by this fork gets APER without knowing about it.
+
+Two things to know if you touch the skeletons:
+
+- `asn_TYPE_operation_t` initialisers are **positional**. Any new op table needs
+  all four PER slots, or entries after them silently shift — a table left at two
+  PER slots puts `random_fill` where `aper_decoder` belongs.
+- Types with no APER codec carry `0` in those slots; `aper_decode()` and
+  `aper_encode()` check before dispatching.
+
+The implementation was ported from the runtime shipped with
+[UERANSIM](https://github.com/aligungr/UERANSIM), which carries the same codec on
+an older 0.9.29-era base.
+
+---
+
 ## Known limitations
 
 - **`asn1p_integer_t` must be 128-bit for NGAP/XnAP.** Both use
@@ -289,9 +342,6 @@ second, so the reference named a descriptor that was never emitted.
   autotools build on any mainstream 64-bit target is fine; a hand-rolled build
   that does not define `HAVE_128_BIT_INT` is not. Check `config.h` if you hit
   this.
-- **`-fprefix` does not prefix C identifiers**, only filenames and include guards
-  (see above), so it does not by itself let two modules that define the same type
-  name be linked together.
 - **`-fhave_native64` is a no-op** (see above).
 
 ---

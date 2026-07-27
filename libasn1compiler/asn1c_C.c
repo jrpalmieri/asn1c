@@ -96,6 +96,14 @@ static int emit_type_DEF(arg_t *arg, asn1p_expr_t *expr, enum tvm_compat tv_mode
 /* MKID_safe() without checking for reserved keywords */
 #define	MKID(expr)	(asn1c_make_identifier(0, expr, 0))
 #define	MKID_safe(expr)	(asn1c_make_identifier(AMI_CHECK_RESERVED, expr, 0))
+/*
+ * MKID()/MKID_safe() name globally visible C objects and so carry the
+ * -fprefix= prefix. MKID_member() names a C structure member, which must not:
+ * a member is scoped to its structure, and its name has to match between the
+ * declaration and every offsetof() that refers to it.
+ */
+#define	MKID_member(expr)	\
+	(asn1c_make_identifier(AMI_CHECK_RESERVED | AMI_NO_PREFIX, expr, 0))
 
 int
 asn1c_lang_C_type_REAL(arg_t *arg) {
@@ -1339,7 +1347,7 @@ asn1c_lang_C_type_SIMPLE_TYPE(arg_t *arg) {
 		if(!expr->_anonymous_type) {
 			if(!(expr->_mark & TM_SKIPinUNION)) {
 				OUT("%s", (expr->marker.flags&EM_INDIRECT)?"\t*":"\t ");
-				OUT("%s", MKID_safe(expr));
+				OUT("%s", MKID_member(expr));
 			}
 			if((expr->marker.flags & (EM_DEFAULT & ~EM_INDIRECT))
 					== (EM_DEFAULT & ~EM_INDIRECT))
@@ -2774,7 +2782,7 @@ emit_member_type_selector(arg_t *arg, asn1p_expr_t *expr, asn1c_ioc_table_and_ob
     if(constraining_memb->marker.flags & EM_INDIRECT) {
         OUT("const void *memb_ptr = *(const void **)");
         OUT("((const char *)parent_sptr + offsetof(%s", c_name(arg).full_name);
-        OUT(", %s));", MKID_safe(constraining_memb));
+        OUT(", %s));", MKID_member(constraining_memb));
         OUT("if(!memb_ptr) return result;\n");
         OUT("\n");
     }
@@ -2795,7 +2803,7 @@ emit_member_type_selector(arg_t *arg, asn1p_expr_t *expr, asn1c_ioc_table_and_ob
         OUT("memb_ptr;\n");
     } else {
         OUT("((const char *)parent_sptr + offsetof(%s", c_name(arg).full_name);
-        OUT(", %s));\n", MKID_safe(constraining_memb));
+        OUT(", %s));\n", MKID_member(constraining_memb));
     }
     OUT("\n");
 
@@ -2884,7 +2892,7 @@ emit_member_table(arg_t *arg, asn1p_expr_t *expr, asn1c_ioc_table_and_objset_t *
             || arg->expr->expr_type == ASN_CONSTR_OPEN_TYPE)
            && (!UNNAMED_UNIONS))
             OUT("choice.");
-        OUT("%s),\n", MKID_safe(expr));
+        OUT("%s),\n", MKID_member(expr));
     }
 
     INDENT(+1);
@@ -3277,6 +3285,7 @@ static int
 out_name_chain(arg_t *arg, enum onc_flags onc_flags) {
 	asn1p_expr_t *expr = arg->expr;
 	const char *id;
+	int recursed = 0;
 
 	if((arg->flags & A1C_COMPOUND_NAMES
 	   || onc_flags & ONC_force_compound_name
@@ -3295,16 +3304,21 @@ out_name_chain(arg_t *arg, enum onc_flags onc_flags) {
 		if(0) tmparg.flags &= ~A1C_COMPOUND_NAMES;
 
 		out_name_chain(&tmparg, onc_flags);
+		recursed = 1;
 
 		if(expr->parent_expr->Identifier) OUT("__");	/* a separator between id components */
 
 		/* Fall through */
 	}
 
-	if(onc_flags & ONC_avoid_keywords)
-		id = MKID_safe(expr);
-	else
-		id = MKID(expr);
+	/*
+	 * As in construct_base_name(): the -fprefix= prefix is emitted by the
+	 * leading component only, which here is the innermost recursion.
+	 */
+	id = asn1c_make_identifier(
+		((onc_flags & ONC_avoid_keywords) ? AMI_CHECK_RESERVED : 0)
+			| (recursed ? AMI_NO_PREFIX : 0),
+		expr, 0);
 	OUT("%s", id);
 
 	return 0;

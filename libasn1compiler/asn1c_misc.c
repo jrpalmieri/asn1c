@@ -102,7 +102,8 @@ asn1c_make_identifier(enum ami_flags_e flags, asn1p_expr_t *expr, ...) {
 	char *first = 0;
 	ssize_t size = 0;
 	char *p;
-	const char *prefix = (expr && (flags & AMI_USE_PREFIX)) ? g_asn1c_prefix : NULL;
+	const char *prefix = (expr && !(flags & AMI_NO_PREFIX) && g_asn1c_prefix[0])
+		? g_asn1c_prefix : NULL;
 	char *sptr[4], **psptr = &sptr[0];
 	int sptr_cnt = 0;
 
@@ -390,8 +391,11 @@ asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format) {
 		if(!exprid && !stdname)
 			return asn1c_make_identifier(AMI_CHECK_RESERVED | AMI_NODELIMITER, 0,
 				"struct", " ", prefix_for_type(typename), (char*)0);
+		/* A named (parameterized or clashing) user type carries the prefix;
+		 * a skeleton type never does. */
 		return asn1c_make_identifier(AMI_CHECK_RESERVED | AMI_NODELIMITER, 0,
-			"struct", " ", MODULE_NAME_OF(exprid),
+			"struct", " ", (exprid ? g_asn1c_prefix : ""),
+			MODULE_NAME_OF(exprid),
 			exprid ? exprid->Identifier : typename, (char*)0);
 	}
 

@@ -10,8 +10,15 @@ enum ami_flags_e {
 	AMI_MASK_ONLY_SPACES	= 1,	/* Mask only spaces, everything else's safe */
 	AMI_CHECK_RESERVED	= 2,	/* Check against reserved keywords */
 	AMI_NODELIMITER       = 4,	/* Do not put delimiter, just concatenate */
-	AMI_USE_PREFIX        = 8,	/* Use Prefix when generating identifier */
+	AMI_NO_PREFIX         = 8,	/* Do not prepend the -fprefix= prefix */
 };
+/*
+ * When an expression is given, the -fprefix= prefix is prepended to the
+ * resulting identifier unless AMI_NO_PREFIX is passed. Pass AMI_NO_PREFIX for
+ * identifiers which must NOT carry it: C structure member names, the trailing
+ * components of a compound name (the leading component carries the prefix),
+ * and output file names (prefixed separately by asn1c_prefixed_filename()).
+ */
 const char *asn1c_make_identifier(enum ami_flags_e, asn1p_expr_t *expr, ...);
 
 /*

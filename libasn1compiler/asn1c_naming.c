@@ -107,20 +107,28 @@ c_name_clash(arg_t *arg) {
 
 static abuf *
 construct_base_name(abuf *buf, asn1p_expr_t *expr, int compound_names,
-                    int avoid_keywords) {
+                    int avoid_keywords, int use_prefix) {
     const char *id;
 
     assert(buf);
 
     if(compound_names && expr->parent_expr) {
-        construct_base_name(buf, expr->parent_expr, compound_names, 0);
+        construct_base_name(buf, expr->parent_expr, compound_names, 0,
+                            use_prefix);
         if(buf->length) {
             abuf_str(buf, "__"); /* component separator */
         }
     }
 
+    /*
+     * The -fprefix= prefix is emitted once, by whichever component is written
+     * first (the outermost parent). Trailing components must not repeat it,
+     * hence the AMI_NO_PREFIX once anything has been written into the buffer.
+     */
     id = asn1c_make_identifier(
-        ((avoid_keywords && !buf->length) ? AMI_CHECK_RESERVED : 0), expr, 0);
+        ((avoid_keywords && !buf->length) ? AMI_CHECK_RESERVED : 0)
+            | ((use_prefix && !buf->length) ? 0 : AMI_NO_PREFIX),
+        expr, 0);
 
     abuf_str(buf, id);
 
@@ -183,17 +191,22 @@ c_name_impl(arg_t *arg, asn1p_expr_t *expr, int avoid_keywords) {
         }
     }
 
-    construct_base_name(&b_asn_name, expr, 0, 0);
-    construct_base_name(&b_part_name, expr, 0, 0);
-    construct_base_name(&b_base_name, expr, compound_names, avoid_keywords);
-    construct_base_name(&b_as_member, expr, 0, 1);
+    /*
+     * asn_name is the ASN.1-side name (used for diagnostics), so it is never
+     * prefixed. as_member becomes a C structure member name when embedded --
+     * also never prefixed -- but is the basis of the typedef name otherwise.
+     */
+    construct_base_name(&b_asn_name, expr, 0, 0, 0);
+    construct_base_name(&b_part_name, expr, 0, 0, 1);
+    construct_base_name(&b_base_name, expr, compound_names, avoid_keywords, 1);
+    construct_base_name(&b_as_member, expr, 0, 1, !arg->embed);
 
     static abuf tmp_compoundable_part_name;
     static abuf compound_part_name;
     abuf_clear(&tmp_compoundable_part_name);
     abuf_clear(&compound_part_name);
-    construct_base_name(&tmp_compoundable_part_name, expr, compound_names, 0);
-    construct_base_name(&compound_part_name, expr, 1, 0);
+    construct_base_name(&tmp_compoundable_part_name, expr, compound_names, 0, 1);
+    construct_base_name(&compound_part_name, expr, 1, 0, 1);
 
     if(!expr->_anonymous_type) {
         if(arg->embed) {
@@ -257,7 +270,8 @@ c_member_name(arg_t *arg, asn1p_expr_t *expr) {
     /* NB: do not use part_name, doesn't work for -fcompound-names */
     abuf_str(&ab, c_name_impl(arg, arg->expr, 0).base_name);
     abuf_str(&ab, "_");
-    const char *mid = asn1c_make_identifier(0, expr, 0);
+    /* base_name already carries the prefix */
+    const char *mid = asn1c_make_identifier(AMI_NO_PREFIX, expr, 0);
     abuf_str(&ab, mid);
     /* "t" as a member name produces _{base}_t which collides with the
      * typedef suffix; append _ to break the collision. */
@@ -278,7 +292,8 @@ c_presence_name(arg_t *arg, asn1p_expr_t *expr) {
         /* NB: do not use part_name, doesn't work for -fcompound-names */
         abuf_str(&ab, c_name_impl(arg, arg->expr, 0).base_name);
         abuf_str(&ab, "_PR_");
-        abuf_str(&ab, asn1c_make_identifier(0, expr, 0));
+        /* base_name already carries the prefix */
+        abuf_str(&ab, asn1c_make_identifier(AMI_NO_PREFIX, expr, 0));
     } else {
         abuf_printf(&ab, "%s_PR_NOTHING",
                     c_name_impl(arg, arg->expr, 0).base_name);
