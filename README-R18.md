@@ -183,7 +183,17 @@ Examples:
 | `ngap-rel18-v18_9.asn1` | NGAP, Release 18 |
 | `xnap-rel18-v18_8.asn1` | XnAP, Release 18 |
 
-The two RRC modules compile. NGAP and XnAP currently do not — see
+All four compile, and the generated C compiles cleanly (verified with
+`gcc -fsyntax-only` over every generated translation unit):
+
+| Module | Generated TUs |
+| ------ | ------------- |
+| `rrc-rel18-v18_9` | 2674 |
+| `rrc-rel17-v3_0` | 2098 |
+| `xnap-rel18-v18_8` | 1394 |
+| `ngap-rel18-v18_9` | 1266 |
+
+NGAP and XnAP additionally require a 128-bit `asn1p_integer_t`; see
 [Known limitations](#known-limitations).
 
 ---
@@ -227,6 +237,35 @@ The two RRC modules compile. NGAP and XnAP currently do not — see
   is now cloned along with the rest of the expression, so forked parameterizations
   do not share mutable state.
 
+### Information object set code generation
+
+3GPP object sets exercise paths that produced C which would not compile. Three
+fixes, all in the generator rather than the parser:
+
+- **Duplicate CHOICE presence enumerators.** An object set may map several
+  object identifiers onto one open type — three NGAP IE ids carry
+  `TYPE NRUESidelinkAggregateMaximumBitrate` — yielding several CHOICE
+  alternatives that share a type name and therefore an enumerator name. The
+  union already collapsed these; the enumerator list did not. Repeats are now
+  made unique (`X`, `X_2`, `X_3`) rather than dropped, because the decoder
+  derives `presence_index` by counting alternatives and dropping one would
+  renumber every later value.
+- **Redefined `asn_VAL_*` constants.** These are named after the value rather
+  than the object set, so every set sharing a value re-emitted an identical
+  file-scope definition — 124 definitions of `asn_VAL_1_mandatory` in one
+  file. Now emitted once per output file.
+- **Unterminated object set cells.** A cell that could not be rendered was
+  abandoned after its opening brace had been written, emitting
+  `{ "&Value", ,`. Such cells arise from the skipped field assignments
+  described above. An empty cell is now emitted instead, which the decoders
+  already interpret as selecting no type.
+
+A related mismatch is fixed alongside: the member table referenced
+`asn_{OER,PER}_memb_*_constr_*` whenever a member carried constraints, while
+the definition additionally required a constraint shape the generator can
+describe. `OCTET STRING (CONTAINING X)` satisfies the first but not the
+second, so the reference named a descriptor that was never emitted.
+
 ### Code generator
 
 - **Member name `t` no longer collides with the typedef suffix**
@@ -244,11 +283,14 @@ The two RRC modules compile. NGAP and XnAP currently do not — see
 
 ## Known limitations
 
-- **NGAP and XnAP do not compile.** Both abort at parse time on
-  `Value "18446744073709551615" ... is too large for this compiler` —
-  `18446744073709551615` is `UINT64_MAX`, which exceeds the range of the parser's
-  `asn1p_integer_t`. This is unrelated to the 3GPP-specific changes above and blocks
-  those two specifications entirely.
+- **`asn1p_integer_t` must be 128-bit for NGAP/XnAP.** Both use
+  `INTEGER (0..18446744073709551615)` — `UINT64_MAX` — which does not fit the
+  64-bit `intmax_t` fallback and aborts the parse with
+  `Value "18446744073709551615" ... is too large for this compiler`.
+  `configure` selects `__int128` via `AC_CHECK_TYPE([__int128])`, so an
+  autotools build on any mainstream 64-bit target is fine; a hand-rolled build
+  that does not define `HAVE_128_BIT_INT` is not. Check `config.h` if you hit
+  this.
 - **`-fprefix` does not prefix C identifiers**, only filenames and include guards
   (see above). The built-in help text overstates its scope.
 - **`-fhave_native64` is a no-op** (see above).
@@ -289,5 +331,13 @@ productions are in conflict.
 make check
 ```
 
-The `tests/tests-asn1c-compiler` suite compares compiler output against checked-in
-expectations and should pass **131/131**, matching upstream.
+The full suite passes (exit 0, no failures). `tests/tests-asn1c-compiler` passes
+**131/131**; `tests/tests-c-compiler` passes 46 of 47 with one expected failure
+(`check-158`).
+
+Note that `tests-asn1c-compiler` only compares generated text — it never
+compiles what it generates. Four of its expectations previously recorded C that
+does not compile (a duplicated `value_PR_BOOLEAN` enumerator, and
+`{ "&Type", ,` cells) and were regenerated when those bugs were fixed. When
+changing the generator, compile the output of the bundled 3GPP modules as well;
+that is what actually catches this class of defect.
