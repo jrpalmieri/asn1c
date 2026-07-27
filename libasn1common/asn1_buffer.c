@@ -151,7 +151,12 @@ vasprintf(char **ret, const char *fmt, va_list args) {
     if(suggested >= 0) {
         *ret = malloc(suggested + 1);
         if(*ret) {
-            int actual_length = vsnprintf(*ret, suggested + 1, fmt, copy);
+            /*
+             * NB: assign, do not re-declare. A nested "int actual_length"
+             * here would shadow the outer one, leaving the value returned
+             * below permanently -1 even on success.
+             */
+            actual_length = vsnprintf(*ret, suggested + 1, fmt, copy);
             if(actual_length >= 0) {
                 assert(actual_length == suggested);
                 assert((*ret)[actual_length] == '\0');
@@ -164,7 +169,11 @@ vasprintf(char **ret, const char *fmt, va_list args) {
         *ret = NULL;
         assert(suggested >= 0); /* Can't function like this */
     }
-    va_end(args);
+    /*
+     * End the copy we made, not the caller's list: `args` is owned by the
+     * caller, which ends it itself (ending it twice is undefined).
+     */
+    va_end(copy);
 
     return actual_length;
 }
