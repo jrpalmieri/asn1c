@@ -265,6 +265,17 @@ asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format) {
 			if(terminal && terminal->expr_type & ASN_CONSTR_MASK) {
 				typename = terminal->Identifier;
 			}
+			if(terminal && terminal->spec_index != -1) {
+				/*
+				 * Name the instantiated parameterized type rather than the
+				 * template it came from: only the instance is emitted, so
+				 * "struct ProtocolIE-Field" is a type that never exists,
+				 * while "struct ProtocolIE_Field_123P4" does. Still a bare
+				 * struct tag, so it stays recursion-safe.
+				 */
+				exprid = terminal;
+				typename = 0;
+			}
 		}
 
 		if(_format == TNF_CTYPE || _format == TNF_CONSTYPE) {
@@ -391,12 +402,37 @@ asn1c_type_name(arg_t *arg, asn1p_expr_t *expr, enum tnfmt _format) {
 		if(!exprid && !stdname)
 			return asn1c_make_identifier(AMI_CHECK_RESERVED | AMI_NODELIMITER, 0,
 				"struct", " ", prefix_for_type(typename), (char*)0);
-		/* A named (parameterized or clashing) user type carries the prefix;
-		 * a skeleton type never does. */
+		if(exprid) {
+			/*
+			 * Name the instantiated parameterized type, not the template:
+			 * "struct Foo_123P4", not "struct Foo". Only the instance is
+			 * ever emitted, so dropping the suffix leaves an incomplete
+			 * type -- which is what A_SEQUENCE_OF(...) of a
+			 * ProtocolIE-Field used to expand to.
+			 *
+			 * asn1c_make_identifier() appends the suffix (and the module
+			 * name on a clash, and the -fprefix= prefix) only for the
+			 * expression it is given, and puts that first, so build the
+			 * "struct " lead-in here rather than passing it along.
+			 */
+			static char *rsafe_buf;
+			static size_t rsafe_buf_size;
+			const char *id = asn1c_make_identifier(0, exprid, (char*)0);
+			size_t needed;
+
+			if(!id) return NULL;
+			needed = sizeof("struct ") + strlen(id);
+			if(needed > rsafe_buf_size) {
+				char *nb = realloc(rsafe_buf, needed);
+				if(!nb) return id;
+				rsafe_buf = nb;
+				rsafe_buf_size = needed;
+			}
+			snprintf(rsafe_buf, rsafe_buf_size, "struct %s", id);
+			return rsafe_buf;
+		}
 		return asn1c_make_identifier(AMI_CHECK_RESERVED | AMI_NODELIMITER, 0,
-			"struct", " ", (exprid ? g_asn1c_prefix : ""),
-			MODULE_NAME_OF(exprid),
-			exprid ? exprid->Identifier : typename, (char*)0);
+			"struct", " ", typename, (char*)0);
 	}
 
 	assert(!"unreachable");

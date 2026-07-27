@@ -446,12 +446,12 @@ asn_TYPE_descriptor_t asn_DEF_UpperLayer_List_41P0 = {
 
 /*** <<< FWD-DECLS [LowerLayer-List] >>> ***/
 
-struct SinglePacket;
+struct SinglePacket_48P0;
 
 /*** <<< TYPE-DECLS [LowerLayer-List] >>> ***/
 
 typedef struct LowerLayer_List_45P0 {
-	A_SEQUENCE_OF(struct SinglePacket) list;
+	A_SEQUENCE_OF(struct SinglePacket_48P0) list;
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;
