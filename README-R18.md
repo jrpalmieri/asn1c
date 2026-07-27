@@ -21,9 +21,7 @@ convention for compiler flags.
 | `-fprefix=<prefix>` | Prepend `<prefix>` to generated **output file names** and their include guards. |
 | `-fhave_native64` | Accepted and parsed, but **currently has no effect** — see [Known limitations](#known-limitations). |
 
-Note that `asn1c -h` lists only `-fprefix` and `-fhave_native64`. `-fcommon` works
-but is missing from the built-in help, and the `-fprefix` entry overstates what it
-does; this file is the accurate reference.
+`asn1c -h` lists all three, along with every other option the compiler accepts.
 
 ### `-fcommon[=<name>]`
 
@@ -292,9 +290,9 @@ second, so the reference named a descriptor that was never emitted.
   that does not define `HAVE_128_BIT_INT` is not. Check `config.h` if you hit
   this.
 - **`-fprefix` does not prefix C identifiers**, only filenames and include guards
-  (see above). The built-in help text overstates its scope.
+  (see above), so it does not by itself let two modules that define the same type
+  name be linked together.
 - **`-fhave_native64` is a no-op** (see above).
-- **`-fcommon` is undocumented in `asn1c -h`.**
 
 ---
 
