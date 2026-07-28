@@ -77,7 +77,6 @@ ASNOPTS=(
     -pdu=all
     -findirect-choice
     -fno-include-deps
-    -fhave_native64
     -no-gen-example
     -S "$SKELETONS"
     -D "$OUTPUT_DIR"

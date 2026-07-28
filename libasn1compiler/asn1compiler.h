@@ -97,11 +97,6 @@ enum asn1c_flags {
 	 * -debug-output-origin-lines
 	 */
 	A1C_DEBUG_OUTPUT_ORIGIN_LINES = 0x400000,
-	/*
-	 * -fhave_native64
-	 * Use int64_t/uint64_t for the target platform.
-	 */
-	A1C_HAVE_NATIVE_64	= 0x800000,
 };
 
 /*

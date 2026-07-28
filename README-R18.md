@@ -1,17 +1,19 @@
 # asn1c-r18 — fork notes
 
 This is a fork of [vlm/asn1c](https://github.com/vlm/asn1c) adapted to compile the
-3GPP ASN.1 specifications for **RRC, NGAP and XNAP up to Release 18**.
+3GPP ASN.1 specifications for **RRC, NGAP and XNAP** up to ***3GPP Release 18**.
 
 Everything in upstream asn1c works as documented in [README.md](README.md); this
 file covers **only what the fork adds or changes**. Upstream is merged in through
 v0.9.29 plus its post-release fixes (including CVE-2025-32893).
 
+Portions of this fork were created using Anthropic Claude.  Model versions: Sonnet 4.6, Opus 5
+
 ---
 
 ## Added command-line options
 
-Four options are added to `asn1c`. All are spelled `-f<name>`, matching upstream's
+Three options are added to `asn1c`. All use the `-f<name>` construction, matching upstream's
 convention for compiler flags.
 
 | Option | Effect |
@@ -19,14 +21,13 @@ convention for compiler flags.
 | `-fcommon` | Write skeleton/support files to a shared directory named `asn1c` instead of into the `-D` output directory. Requires `-D`. |
 | `-fcommon=<name>` | As above, using `<name>` for the directory. An empty `<name>` falls back to `asn1c`. |
 | `-fprefix=<prefix>` | Prepend `<prefix>` to generated **output file names**, their include guards, and the **C identifiers** — so several specifications can be linked into one binary. |
-| `-fhave_native64` | Accepted and parsed, but **currently has no effect** — see [Known limitations](#known-limitations). |
 
-`asn1c -h` lists all three, along with every other option the compiler accepts.
+`asn1c -h` will list every option the compiler accepts, including these additions.
 
 ### `-fcommon[=<name>]`
 
-Normally `asn1c` copies the ~69 skeleton runtime files (`BIT_STRING.c`,
-`constr_SEQUENCE.c`, `asn_application.h`, …) into the same directory as the
+Normally `asn1c` copies the ~69 "skeleton" runtime files in `/skeletons` (`BIT_STRING.c`,
+`constr_SEQUENCE.c`, `asn_application.h`, etc) into the same directory as the
 generated code. When you compile several specifications separately — RRC, NGAP and
 XNAP each into their own directory — you get several redundant copies of an
 identical runtime, and they can drift apart.
@@ -39,7 +40,7 @@ asn1c -D ./output/rrc  -fcommon ./rrc.asn1
 asn1c -D ./output/ngap -fcommon ./ngap.asn1
 
 output/
-├── asn1c/          <- skeleton runtime, written once
+├── asn1c/          <- copied skeleton files, written once
 │   ├── BIT_STRING.c
 │   ├── constr_SEQUENCE.c
 │   └── ...
@@ -50,7 +51,7 @@ output/
     └── ...
 ```
 
-Generated headers then refer to the runtime by relative path:
+Generated headers then refer to the skeleton files by relative path:
 
 ```c
 #include "../asn1c/asn_application.h"
@@ -113,19 +114,11 @@ Two things deliberately keep their unprefixed names:
 
 - **Structure member names.** A member is scoped to its structure, and its name
   has to match between the declaration and every `offsetof()` that refers to it.
-- **The skeleton runtime.** `OCTET_STRING_t`, `asn_DEF_NativeInteger`,
+- **The copied skeleton runtime files.** `OCTET_STRING_t`, `asn_DEF_NativeInteger`,
   `asn_OP_SEQUENCE` and friends are one shared copy by design.
 
 The ASN.1 names carried in descriptors for diagnostics (`"MyChoice"`) are also
 left alone, so decoder output and XER remain unchanged.
-
-### `-fhave_native64`
-
-Intended to select `int64_t`/`uint64_t` for the target platform. It is accepted on
-the command line and sets the `A1C_HAVE_NATIVE_64` flag bit, but **nothing in the
-compiler reads that bit**, so output is byte-for-byte identical with and without
-it. It is currently a no-op, retained for command-line compatibility with existing
-scripts (`asn1c_run.sh` passes it).
 
 ---
 
@@ -149,14 +142,12 @@ binary has not been built yet.
 Every invocation always passes:
 
 ```
--fcompound-names -pdu=all -findirect-choice -fno-include-deps
--fhave_native64 -no-gen-example
+-fcompound-names -pdu=all -findirect-choice -fno-include-deps -no-gen-example
 ```
 
 ### Why `-fcompound-names` and `-findirect-choice` are not optional
 
-Both are load-bearing for 3GPP input. Neither is fork-specific — they are stock
-upstream options — but omitting either produces a broken result, so they are worth
+Both are required for 3GPP input. Omitting either produces a broken result, so they are worth
 understanding before you invoke `asn1c` directly instead of through the wrapper.
 
 **`-fcompound-names`** — 3GPP modules reuse short member names across nested
@@ -198,7 +189,7 @@ Examples:
 
 ## Bundled sample specifications
 
-`.sample_asn1/` carries the 3GPP modules this fork is developed against:
+`.sample_asn1/` carries the 3GPP modules this fork was developed against:
 
 | File | Spec |
 | ---- | ---- |
@@ -238,7 +229,9 @@ NGAP and XnAP additionally require a 128-bit `asn1p_integer_t`; see
 - **Modernised bison parameter passing.** The parser now uses `%parse-param {void
   **param}` instead of the obsolete `YYPARSE_PARAM` macro, which bison 3.x removed;
   `yyerror()` takes the parameter accordingly. This is a build-compatibility change
-  with no effect on the language accepted.
+  with no effect on the language accepted.  Note this is readable by Bison 2.7, so
+  for safety to comply with the upstream's REQUIREMENTS.md, that version of Bison
+  can be used with the fork.
 
 ### Fixer
 
@@ -307,8 +300,7 @@ second, so the reference named a descriptor that was never emitted.
 
 ## Aligned PER (APER)
 
-The skeletons implement **aligned** PER alongside upstream's unaligned PER, which
-3GPP needs: NGAP and XnAP are APER on the wire, RRC is UPER.
+The skeletons in this fork implement **aligned** PER alongside upstream's unaligned PER.  3GPP requires APER for NGAP and XnAP, while RRC uses UPER.
 
 - `aper_encode()`, `aper_encode_to_buffer()`, `aper_encode_to_new_buffer()`,
   `aper_decode()`, `aper_decode_complete()` mirror their `uper_*` counterparts.
@@ -316,9 +308,9 @@ The skeletons implement **aligned** PER alongside upstream's unaligned PER, whic
   pair, and `asn_encode()` / `asn_decode()` accept `ATS_ALIGNED_BASIC_PER` and
   `ATS_ALIGNED_CANONICAL_PER`.
 - No generator change is involved. Generated code references the `asn_OP_*`
-  tables, so a module compiled by this fork gets APER without knowing about it.
+  tables, so a module compiled by this fork will have both APER and UPER functionality avaialble.
 
-Two things to know if you touch the skeletons:
+Two things to know about the skeletons when making modifications:
 
 - `asn_TYPE_operation_t` initialisers are **positional**. Any new op table needs
   all four PER slots, or entries after them silently shift — a table left at two
@@ -326,9 +318,9 @@ Two things to know if you touch the skeletons:
 - Types with no APER codec carry `0` in those slots; `aper_decode()` and
   `aper_encode()` check before dispatching.
 
-The implementation was ported from the runtime shipped with
-[UERANSIM](https://github.com/aligungr/UERANSIM), which carries the same codec on
-an older 0.9.29-era base.
+The APER implementation was ported from the runtime shipped with
+[UERANSIM](https://github.com/aligungr/UERANSIM), which used the same codec on
+an older asn1c-generated RRC/NGAP file set.
 
 ---
 
@@ -342,7 +334,6 @@ an older 0.9.29-era base.
   autotools build on any mainstream 64-bit target is fine; a hand-rolled build
   that does not define `HAVE_128_BIT_INT` is not. Check `config.h` if you hit
   this.
-- **`-fhave_native64` is a no-op** (see above).
 
 ---
 

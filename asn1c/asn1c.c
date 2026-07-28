@@ -145,8 +145,6 @@ main(int ac, char **av) {
                 asn1_compiler_flags &= ~A1C_LINK_SKELETONS;
             } else if(strcmp(optarg, "link-skeletons") == 0) {
                 asn1_compiler_flags |= A1C_LINK_SKELETONS;
-            } else if(strcmp(optarg, "have_native64") == 0) {
-                asn1_compiler_flags |= A1C_HAVE_NATIVE_64;
             } else if(strncmp(optarg, "prefix=", 7) == 0) {
                 asn1c_set_prefix(optarg + 7);
             } else if(strcmp(optarg, "common") == 0) {
@@ -626,7 +624,6 @@ usage(const char *av0) {
 "                        specifications can be linked into one binary.\n"
 "                        Structure member names and the skeleton runtime\n"
 "                        are left unprefixed\n"
-"  -fhave_native64       Accepted for compatibility; currently has no effect\n"
 "  -fnative-types        Deprecated, the inverse of -fwide-types\n"
 "  -fskeletons-copy      Deprecated, the inverse of -flink-skeletons\n"
 "\n"
