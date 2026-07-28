@@ -7,6 +7,9 @@
 
 typedef long	 Int1_t;
 
+#define Int1_ten	((Int1_t)10)
+#define Int1_other_ten	((Int1_t)10)
+
 /*** <<< FUNC-DECLS [Int1] >>> ***/
 
 extern asn_TYPE_descriptor_t asn_DEF_Int1;

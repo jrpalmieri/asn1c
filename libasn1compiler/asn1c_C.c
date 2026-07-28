@@ -1311,6 +1311,106 @@ asn1c_lang_C_type_REFERENCE(arg_t *arg) {
 	return asn1c_lang_C_type_SIMPLE_TYPE(arg);
 }
 
+/*
+ * Emit the value assignments that name constants of this type:
+ *
+ *   id-NAS-PDU  ProtocolIE-ID ::= 38
+ *      ->  #define ProtocolIE_ID_id_NAS_PDU ((ProtocolIE_ID_t)38)
+ *
+ * 3GPP specs address IEs by these names, so code written against the generated
+ * headers needs them. asn1c compiles value assignments for its own use (object
+ * set tables reference them as asn_VAL_*) but never exposes them, leaving the
+ * numbers to be copied into the application by hand.
+ *
+ * Terminal-type resolution is the expensive part and the answer does not change
+ * during a run, so every integer value assignment in the specification is
+ * resolved once, on first use, and the result reused for every type afterwards.
+ */
+struct value_binding {
+    const asn1p_expr_t *type;   /* terminal type the value belongs to */
+    asn1p_expr_t *value;
+};
+static struct {
+    const asn1p_t *asn;         /* which specification this was built from */
+    struct value_binding *bindings;
+    size_t count;
+} value_index;
+
+static void
+build_value_index(arg_t *arg) {
+    asn1p_module_t *mod;
+    size_t capacity = 0;
+
+    if(value_index.asn == arg->asn) return;
+
+    free(value_index.bindings);
+    value_index.bindings = NULL;
+    value_index.count = 0;
+    value_index.asn = arg->asn;
+
+    TQ_FOR(mod, &(arg->asn->modules), mod_next) {
+        asn1p_expr_t *v;
+        TQ_FOR(v, &(mod->members), next) {
+            asn1p_expr_t *terminal;
+
+            if(v->meta_type != AMT_VALUE) continue;
+            if(!v->value || v->value->type != ATV_INTEGER) continue;
+
+            terminal = asn1f_find_terminal_type_ex(arg->asn, arg->ns, v);
+            if(!terminal) continue;
+
+            if(value_index.count == capacity) {
+                size_t want = capacity ? capacity * 2 : 64;
+                struct value_binding *nb =
+                    realloc(value_index.bindings, want * sizeof(*nb));
+                if(!nb) return;
+                value_index.bindings = nb;
+                capacity = want;
+            }
+            value_index.bindings[value_index.count].type = terminal;
+            value_index.bindings[value_index.count].value = v;
+            value_index.count++;
+        }
+    }
+}
+
+static void
+emit_value_defines(arg_t *arg, asn1p_expr_t *type_expr, const char *c_type) {
+    size_t i;
+    int emitted = 0;
+
+    /*
+     * Only where the typedef is a native integer. A wide type is represented as
+     * INTEGER_t, and "((INTEGER_t)38)" is a cast to a struct -- not something to
+     * put in a header.
+     */
+    if(!c_type
+    || (strcmp(c_type, "long") != 0 && strcmp(c_type, "unsigned long") != 0))
+        return;
+
+    build_value_index(arg);
+
+    for(i = 0; i < value_index.count; i++) {
+        asn1p_expr_t *v = value_index.bindings[i].value;
+        char *type_name;
+        char *value_name;
+
+        if(value_index.bindings[i].type != type_expr) continue;
+
+        if(!emitted++) OUT("\n");
+        /* asn1c_make_identifier() hands back one static buffer, so the type
+         * name has to be copied before the value name overwrites it. */
+        type_name = strdup(MKID(type_expr));
+        value_name = strdup(asn1c_make_identifier(AMI_NO_PREFIX, v, 0));
+        if(type_name && value_name) {
+            OUT("#define %s_%s\t((%s_t)%s)\n", type_name, value_name,
+                type_name, asn1p_itoa(v->value->value.v_integer));
+        }
+        free(type_name);
+        free(value_name);
+    }
+}
+
 int
 asn1c_lang_C_type_SIMPLE_TYPE(arg_t *arg) {
 	asn1p_expr_t *expr = arg->expr;
@@ -1369,6 +1469,13 @@ asn1c_lang_C_type_SIMPLE_TYPE(arg_t *arg) {
 		OUT("%s%s_t",
 			(expr->marker.flags & EM_INDIRECT)?"*":" ",
 			MKID(expr));
+		if(expr->expr_type == A1TC_REFERENCE
+		|| (expr->expr_type & ASN_BASIC_MASK)) {
+			OUT(";\n");
+			emit_value_defines(arg, expr,
+				asn1c_type_name(arg, arg->expr, TNF_CTYPE));
+			arg->target->destination[OT_TYPE_DECLS].indent_level = 1;
+		}
 	}
 
 	if((expr->expr_type == ASN_BASIC_ENUMERATED)
